@@ -4,17 +4,23 @@ const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcryptjs'); // Para hashear contraseñas de forma segura
 const path = require('path'); // Módulo para trabajar con rutas de archivos
+const session = require('express-session'); // <--- AÑADIDO: Importa express-session
 
+const { estaAutenticado } = require('./middleware/autenticacion');
 const app = express();
 const port = process.env.PORT || 3000; // Puedes configurar el puerto en .env (ej. PORT=3000)
 
-// Configuración de la conexión a la base de datos
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
+// <--- AÑADIDO: Configuración del middleware de sesión
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'mi_secreto_super_seguro',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 * 24
+    }
+}));
+
 
 // Middleware para parsear el cuerpo de las solicitudes (JSON y URL-encoded)
 app.use(express.json()); // Para solicitudes con body en formato JSON
@@ -23,6 +29,17 @@ app.use(express.urlencoded({ extended: true })); // Para solicitudes con body en
 // Middleware para servir archivos estáticos (tu frontend)
 // Esto hace que la carpeta 'public' sea accesible desde el navegador
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+// Configuración de la conexión a la base de datos
+const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
 
 // --- Rutas de la API ---
 
@@ -118,7 +135,10 @@ app.post('/api/login', async (req, res) => {
         }
 
         // Si llegamos aquí, las credenciales son correctas
-        // En un sistema real, aquí crearías una sesión o un token JWT para mantener al usuario logueado.
+        // <--- AÑADIDO: Establecer la sesión del usuario
+        req.session.userId = user.id_usuario;
+        req.session.userEmail = user.email; // Opcional, pero útil
+
         console.log('Usuario ' + user.email + ' ha iniciado sesión exitosamente. ID:', user.id_usuario);
         res.status(200).json({ message: 'Inicio de sesión exitoso.', userId: user.id_usuario });
 
@@ -127,6 +147,63 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ message: 'Error interno del servidor durante el inicio de sesión.' });
     }
 });
+
+// <--- AÑADIDO: Ruta para obtener la información del usuario logueado
+// Ruta para obtener la información del usuario logueado
+app.get('/perfil', estaAutenticado, async (req, res) => {
+  try {
+    // A) Traer datos básicos del usuario
+    const [userRows] = await connection.promise().query(
+      `SELECT
+         nombre_usuario AS nombre,
+         apellido_usuario AS apellido,
+         email
+       FROM usuarios
+       WHERE id_usuario = ?`,
+      [req.session.userId]
+    );
+    const usuario = userRows[0];
+    if (!usuario) {
+      return res.redirect('/login.html');
+    }
+
+    // B) Traer álbumes de la tabla albumes
+    const [albumesRows] = await connection.promise().query(
+      `SELECT
+         id_album,
+         titulo_album AS titulo,
+         DATE_FORMAT(fecha_creacion_album, '%Y-%m-%d') AS fecha,
+         tipo_album AS tipo
+       FROM albumes
+       WHERE id_usuario = ?`,
+      [req.session.userId]
+    );
+    const albumes = albumesRows; // puede ser []
+
+    // C) Renderizar la vista con los datos correctos
+    res.render('perfil', { usuario, albumes });
+
+  } catch (err) {
+    console.error('💥 Error en GET /perfil:', err);
+    res.status(500).send('Error interno al cargar perfil, mira la consola.');
+  }
+});
+
+// --- FIN AÑADIDO DE RUTA USER-INFO ---
+
+// <--- AÑADIDO: Ruta para cerrar sesión
+app.post('/api/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error al destruir la sesión:', err);
+            return res.status(500).json({ message: 'Error al cerrar sesión.' });
+        }
+        // Para asegurar que la cookie de sesión se elimina del navegador
+        res.clearCookie('connect.sid'); // connect.sid es el nombre por defecto de la cookie de express-session
+        res.status(200).json({ message: 'Sesión cerrada exitosamente.' });
+    });
+});
+// --- FIN AÑADIDO DE RUTA LOGOUT ---
 
 
 // Iniciar el servidor

@@ -121,3 +121,73 @@ button {
 .register-link a:hover {
     text-decoration: underline;
 }
+
+.perfil-container { /* <--- ¡Nombre de clase cambiado aquí! */
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra más sutil */
+    width: 90%;
+    max-width: 600px; /* Ancho flexible para contenido */
+    text-align: center;
+}
+
+h1 { /* El h1 es para perfil.html */
+    color: #5cb85c;
+}
+p { /* El p es para perfil.html */
+    margin-bottom: 20px;
+}
+.button { /* El .button es para perfil.html */
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 16px;
+    margin-top: 10px;
+    display: inline-block;
+}
+.button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos adicionales para el perfil detallado */
+
+.card {
+    padding: 30px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    width: 400px;
+    margin: 50px auto;
+    text-align: center;
+}
+
+.card h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.card p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.card button {
+    background-color: #dc3545; /* rojo para logout */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.card button:hover {
+    background-color: #c82333;
+}

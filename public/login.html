@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Artesanos.com</title>
-    <link rel="stylesheet" href="/estilo.css"> 
+    <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
     <div class="container">
@@ -20,51 +20,49 @@
             </div>
             <button type="submit" class="login-button">Entrar</button>
         </form>
+        <div id="responseMessage" class="message"></div>
         <div id="message" class="message" style="display: none;"></div>
         <div class="link-text register-link"> ¿Aún no tienes una cuenta? <a href="/registro.html">Regístrate aquí</a>
         </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (event) => {
-            event.preventDefault(); // Previene el envío del formulario tradicional
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const messageDiv = document.getElementById('message');
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
 
-            messageDiv.style.display = 'none'; // Oculta mensajes anteriores
+        const responseMessage = document.getElementById('responseMessage');
 
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
 
-                const data = await response.json();
+            const data = await response.json();
 
-                if (response.ok) {
-                    messageDiv.className = 'message success';
-                    messageDiv.textContent = data.message;
-                    messageDiv.style.display = 'block';
-                    alert("¡Inicio de sesión exitoso!"); // Solo para confirmación visual por ahora
-                    // Aquí podrías redirigir al usuario a su perfil o a una página de inicio
-                    // window.location.href = '/perfil.html'; 
-                } else {
-                    messageDiv.className = 'message error';
-                    messageDiv.textContent = data.message || 'Error al iniciar sesión.';
-                    messageDiv.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error de red o del servidor:', error);
-                messageDiv.className = 'message error';
-                messageDiv.textContent = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-                messageDiv.style.display = 'block';
+            if (response.ok) {
+                responseMessage.style.color = 'green';
+                responseMessage.textContent = data.message;
+                console.log('Inicio de sesión exitoso:', data.message);
+                // Asegúrate de que esta línea esté DESCOMENTADA:
+                window.location.href = '/perfil'; // ¡Esta línea es la que hace la redirección!
+            } else {
+                responseMessage.style.color = 'red';
+                responseMessage.textContent = data.message || 'Error al iniciar sesión.';
+                console.error('Error al iniciar sesión:', data.message);
             }
-        });
-    </script>
+        } catch (error) {
+            responseMessage.style.color = 'red';
+            responseMessage.textContent = 'Error de conexión con el servidor.';
+            console.error('Error de red:', error);
+        }
+    });
+</script>
 </body>
 </html>
