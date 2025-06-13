@@ -1,34 +1,91 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Perfil de <%= usuario.nombre %> <%= usuario.apellido %></title>
-  <link rel="stylesheet" href="/estilo.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></title>
+  <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
-  <div class="card">
-    <h1>Perfil de <%= usuario.nombre %> <%= usuario.apellido %></h1>
-    <p><strong>Email:</strong> <%= usuario.email %></p>
+  <div class="card">
+        <h1>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></h1>
+    <p><strong>Email:</strong> <%= usuario.email %></p>
 
-    <h2>Mis álbumes</h2>
-    <% if (albumes.length === 0) { %>
-      <p>No tienes álbumes aún.</p>
-    <% } else { %>
-      <ul>
-        <% albumes.forEach(a => { %>
-          <li>
-            <strong><%= a.titulo %></strong>
-            (<%= a.tipo %>) – Creado: <%= a.fecha %>
-          </li>
-        <% }) %>
-      </ul>
-    <% } %>
+    <h2>Mis álbumes</h2>
+    <% if (albumes.length === 0) { %>
+      <p>No tienes álbumes aún.</p>
+    <% } else { %>
+      <ul>
+        <% albumes.forEach(a => { %>
+          <li>
+                        <strong><%= a.titulo_album %></strong>
+            (<%= a.tipo_album %>) – Creado: <%= a.fecha_creacion_album %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
 
-    <form action="/api/logout" method="POST">
-      <button type="submit">Cerrar sesión</button>
-    </form>
-  </div>
+    <h2>Mis Imágenes Subidas</h2>
+    <% if (imagenes.length === 0) { %>
+      <p>No has subido imágenes aún.</p>
+    <% } else { %>
+      <div class="galeria">
+        <% imagenes.forEach(img => { %>
+          <div class="imagen-item">
+            <img src="/imagenes/<%= img.url_obra %>" alt="Obra" style="max-width:200px;">
+            <% if (img.titulo_obra_opcional) { %>
+              <p><%= img.titulo_obra_opcional %></p>
+            <% } %>
+            <button onclick="eliminarImagen('<%= img.url_obra %>')">Eliminar</button>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <h3>Subir nueva imagen</h3>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" name="imagen" required><br>
+      <input type="text" name="titulo_obra_opcional" placeholder="Título opcional">
+      <button type="submit">Subir</button>
+    </form>
+
+    <div id="uploadMessage"></div>
+
+    <script>
+      document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+
+        const response = await fetch('/api/subir-imagen', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        document.getElementById('uploadMessage').textContent = result.message;
+
+        if (response.ok) {
+          window.location.reload();
+        }
+      });
+
+      async function eliminarImagen(filename) {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta imagen?')) return;
+
+  const response = await fetch(`/api/eliminar-imagen/${encodeURIComponent(filename)}`, {  
+    method: 'DELETE'
+  });
+
+  const result = await response.json();
+  alert(result.message);
+  if (response.ok) {
+    window.location.reload();
+  }
+}
+
+    </script>
+
+  </div>
 </body>
 </html>
-

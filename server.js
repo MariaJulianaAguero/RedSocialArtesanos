@@ -1,224 +1,186 @@
-require('dotenv').config(); // Carga las variables de entorno
-
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
-const bcrypt = require('bcryptjs'); // Para hashear contraseñas de forma segura
-const path = require('path'); // Módulo para trabajar con rutas de archivos
-const session = require('express-session'); // <--- AÑADIDO: Importa express-session
-
+const bcrypt = require('bcryptjs');
+const path = require('path');
+const session = require('express-session');
+const multer = require('multer');
+const fs = require('fs');
 const { estaAutenticado } = require('./middleware/autenticacion');
-const app = express();
-const port = process.env.PORT || 3000; // Puedes configurar el puerto en .env (ej. PORT=3000)
 
-// <--- AÑADIDO: Configuración del middleware de sesión
+const app = express();
+require('dotenv').config();
+
+console.log('¡Servidor de IMÁGENES iniciando! Versión: 2025-06-12_FINAL'); // <--- ¡AGREGA ESTA LÍNEA!
+
+const port = process.env.PORT || 3000;
+
+// Configuración multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'public/imagenes'),
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random()*1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, unique + ext);
+  }
+});
+const upload = multer({ storage });
+
+// Sesiones
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'mi_secreto_super_seguro',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 60 * 24
-    }
+  secret: process.env.SESSION_SECRET || 'mi_secreto_super_seguro',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 1000*60*60*24 }
 }));
 
+// Parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Middleware para parsear el cuerpo de las solicitudes (JSON y URL-encoded)
-app.use(express.json()); // Para solicitudes con body en formato JSON
-app.use(express.urlencoded({ extended: true })); // Para solicitudes con body en formato URL-encoded (formularios HTML)
+// Archivos estáticos
+app.use(express.static(path.join(__dirname,'public')));
+app.use('/imagenes', express.static(path.join(__dirname,'public','imagenes')));
 
-// Middleware para servir archivos estáticos (tu frontend)
-// Esto hace que la carpeta 'public' sea accesible desde el navegador
-app.use(express.static(path.join(__dirname, 'public')));
+// EJS
+app.set('view engine','ejs');
+app.set('views', path.join(__dirname,'views'));
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-// Configuración de la conexión a la base de datos
+// DB
 const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 });
 
+// Rutas
 
-// --- Rutas de la API ---
+app.get('/', (req,res)=> res.sendFile(path.join(__dirname,'public','registro.html')));
 
-// Ruta por defecto para la página principal
-// Ahora apunta a registro.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'registro.html'));
-});
+// ---------> Acá resolvemos el problema:
 
-
-// Ruta de ejemplo: obtener todos los usuarios (¡solo para prueba, no para producción!)
-app.get('/api/users', (req, res) => {
-    connection.query('SELECT id_usuario, nombre_usuario, email FROM usuarios', (err, results) => {
-        if (err) {
-            console.error('Error al obtener usuarios:', err);
-            return res.status(500).json({ message: 'Error interno del servidor' });
-        }
-        res.json(results);
-    });
-});
-
-// Ruta para el REGISTRO de nuevos usuarios
-app.post('/api/register', async (req, res) => {
-    const { nombre_usuario, apellido_usuario, email, password } = req.body;
-
-    // Validación básica (puedes añadir más)
-    if (!nombre_usuario || !apellido_usuario || !email || !password) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios.' });
-    }
-
-    try {
-        // 1. Verificar si el email ya existe
-        const [rows] = await connection.promise().query('SELECT id_usuario FROM usuarios WHERE email = ?', [email]);
-        if (rows.length > 0) {
-            return res.status(409).json({ message: 'El email ya está registrado.' });
-        }
-
-        // 2. Hashear la contraseña
-        const saltRounds = 10; // Número de rondas de salting para bcrypt (más alto = más seguro, pero más lento)
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // 3. Insertar el nuevo usuario en la base de datos
-        const insertQuery = `
-            INSERT INTO usuarios (
-                nombre_usuario,
-                apellido_usuario,
-                email,
-                hash_contrasena,
-                portafolio_publico
-            ) VALUES (?, ?, ?, ?, ?)
-        `;
-        const [insertResult] = await connection.promise().query(insertQuery, [
-            nombre_usuario,
-            apellido_usuario,
-            email,
-            hashedPassword,
-            false // Por defecto, el portafolio no es público al registrarse
-        ]);
-
-        console.log('Usuario registrado con ID:', insertResult.insertId);
-        res.status(201).json({ message: 'Registro exitoso. ¡Bienvenido!', userId: insertResult.insertId });
-
-    } catch (error) {
-        console.error('Error durante el registro:', error);
-        res.status(500).json({ message: 'Error interno del servidor durante el registro.' });
-    }
-});
-
-// Ruta para el INICIO DE SESIÓN de usuarios
-app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).json({ message: 'Email y contraseña son obligatorios.' });
-    }
-
-    try {
-        // 1. Buscar al usuario por su email
-        const [rows] = await connection.promise().query('SELECT id_usuario, email, hash_contrasena FROM usuarios WHERE email = ?', [email]);
-        const user = rows[0];
-
-        if (!user) {
-            // Es buena práctica no decir si el email existe o no por seguridad,
-            // solo que las credenciales son inválidas.
-            return res.status(401).json({ message: 'Credenciales inválidas.' });
-        }
-
-        // 2. Comparar la contraseña ingresada con el hash almacenado
-        const isMatch = await bcrypt.compare(password, user.hash_contrasena);
-
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Credenciales inválidas.' });
-        }
-
-        // Si llegamos aquí, las credenciales son correctas
-        // <--- AÑADIDO: Establecer la sesión del usuario
-        req.session.userId = user.id_usuario;
-        req.session.userEmail = user.email; // Opcional, pero útil
-
-        console.log('Usuario ' + user.email + ' ha iniciado sesión exitosamente. ID:', user.id_usuario);
-        res.status(200).json({ message: 'Inicio de sesión exitoso.', userId: user.id_usuario });
-
-    } catch (error) {
-        console.error('Error durante el inicio de sesión:', error);
-        res.status(500).json({ message: 'Error interno del servidor durante el inicio de sesión.' });
-    }
-});
-
-// <--- AÑADIDO: Ruta para obtener la información del usuario logueado
-// Ruta para obtener la información del usuario logueado
-app.get('/perfil', estaAutenticado, async (req, res) => {
+// Registro de usuario
+app.post('/api/register', async (req,res)=>{
+  const { nombre_usuario, apellido_usuario, email, password } = req.body;
   try {
-    // A) Traer datos básicos del usuario
-    const [userRows] = await connection.promise().query(
-      `SELECT
-         nombre_usuario AS nombre,
-         apellido_usuario AS apellido,
-         email
-       FROM usuarios
-       WHERE id_usuario = ?`,
-      [req.session.userId]
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await connection.promise().query(
+      'INSERT INTO usuarios (nombre_usuario, apellido_usuario, email, hash_contrasena) VALUES (?,?,?,?)',
+      [nombre_usuario, apellido_usuario, email, hashedPassword]
     );
-    const usuario = userRows[0];
-    if (!usuario) {
-      return res.redirect('/login.html');
-    }
-
-    // B) Traer álbumes de la tabla albumes
-    const [albumesRows] = await connection.promise().query(
-      `SELECT
-         id_album,
-         titulo_album AS titulo,
-         DATE_FORMAT(fecha_creacion_album, '%Y-%m-%d') AS fecha,
-         tipo_album AS tipo
-       FROM albumes
-       WHERE id_usuario = ?`,
-      [req.session.userId]
-    );
-    const albumes = albumesRows; // puede ser []
-
-    // C) Renderizar la vista con los datos correctos
-    res.render('perfil', { usuario, albumes });
-
+    res.status(201).json({ message: 'Usuario registrado correctamente.' });
   } catch (err) {
-    console.error('💥 Error en GET /perfil:', err);
-    res.status(500).send('Error interno al cargar perfil, mira la consola.');
+    console.error(err);
+    res.status(500).json({ message: 'Error al registrar usuario.' });
   }
 });
 
-// --- FIN AÑADIDO DE RUTA USER-INFO ---
+// Login de usuario
+app.post('/api/login', async (req,res)=>{
+  const { email, password } = req.body;
+  try {
+    const [rows] = await connection.promise().query(
+      'SELECT * FROM usuarios WHERE email = ?',
+      [email]
+    );
+    if(rows.length === 0) return res.status(401).json({ message: 'Usuario no encontrado.' });
 
-// <--- AÑADIDO: Ruta para cerrar sesión
-app.post('/api/logout', (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            console.error('Error al destruir la sesión:', err);
-            return res.status(500).json({ message: 'Error al cerrar sesión.' });
+    const usuario = rows[0];
+    const valid = await bcrypt.compare(password, usuario.hash_contrasena);
+    if(!valid) return res.status(401).json({ message: 'Contraseña incorrecta.' });
+
+    req.session.userId = usuario.id_usuario;
+    res.json({ message: 'Inicio de sesión exitoso.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error al iniciar sesión.' });
+  }
+});
+
+// Perfil
+app.get('/perfil', estaAutenticado, async (req,res)=>{
+  try {
+    const [usuarioData] = await connection.promise().query(
+      'SELECT nombre_usuario, apellido_usuario, email FROM usuarios WHERE id_usuario = ?',
+      [req.session.userId]
+    );
+    const usuario = usuarioData[0];
+
+    const [albumesData] = await connection.promise().query(
+      'SELECT * FROM albumes WHERE id_usuario = ?',
+      [req.session.userId]
+    );
+
+    const [imagenesData] = await connection.promise().query(
+      'SELECT * FROM imagenes WHERE id_usuario = ?',
+      [req.session.userId]
+    );
+
+    res.render('perfil', { usuario, albumes: albumesData, imagenes: imagenesData });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error al cargar perfil');
+  }
+});
+
+// Subir imagen
+app.post('/api/subir-imagen', estaAutenticado, upload.single('imagen'), async (req,res)=>{
+  try {
+    const filename = req.file.filename;
+    const titulo = req.body.titulo_obra_opcional || null;
+    await connection.promise().query(
+      'INSERT INTO imagenes (id_usuario,url_obra,titulo_obra_opcional) VALUES (?,?,?)',
+      [req.session.userId, filename, titulo]
+    );
+    res.status(201).json({ message:'Imagen subida exitosamente', filename, titulo });
+  } catch(e) {
+    console.error(e);
+    res.status(500).json({ message:'Error interno al subir imagen' });
+  }
+});
+
+// Eliminar imagen
+// Eliminar imagen
+app.delete('/api/eliminar-imagen/:filename', estaAutenticado, async (req,res)=>{ // <--- ¡Con estaAutenticado!
+    const { filename } = req.params;
+    try {
+        // Asegúrate de que la imagen pertenece al usuario antes de eliminarla
+        const [result] = await connection.promise().query(
+            'DELETE FROM imagenes WHERE id_usuario=? AND url_obra=?', // <--- ¡Con id_usuario!
+            [req.session.userId, filename] // <--- ¡Con req.session.userId!
+        );
+
+        if(result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Imagen no encontrada o no autorizada para eliminar.' });
         }
-        // Para asegurar que la cookie de sesión se elimina del navegador
-        res.clearCookie('connect.sid'); // connect.sid es el nombre por defecto de la cookie de express-session
-        res.status(200).json({ message: 'Sesión cerrada exitosamente.' });
-    });
-});
-// --- FIN AÑADIDO DE RUTA LOGOUT ---
 
+        // Si la imagen se eliminó de la base de datos, procede a eliminar el archivo físico
+        const filePath = path.join(__dirname, 'public', 'imagenes', filename);
+        fs.unlink(filePath, err => {
+            if (err) {
+                console.error('Error al eliminar archivo físico:', err);
+            }
+        });
 
-// Iniciar el servidor
-app.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
+        res.json({ message: 'Imagen eliminada correctamente.' });
+    } catch(e) {
+        console.error('Error en la ruta DELETE /api/eliminar-imagen:', e);
+        res.status(500).json({ message: 'Error interno al eliminar imagen.' });
+    }
 });
 
-// Manejo de cierre de conexión (opcional, para cerrar gracefully)
-process.on('SIGINT', () => {
-    connection.end((err) => {
-        if (err) {
-            console.error('Error al cerrar la conexión de la DB:', err);
-            return;
-        }
-        console.log('Conexión a la base de datos cerrada.');
-        process.exit(0);
-    });
+// Logout
+app.post('/api/logout', (req,res)=>{
+  req.session.destroy(()=> res.clearCookie('connect.sid').json({message:'Sesión cerrada'}));
 });
+
+app.use((req, res, next) => {
+    console.log(`--- Manejador 404 alcanzado ---`);
+    console.log(`Método: ${req.method}, URL: ${req.originalUrl}`);
+    // Enviamos una respuesta HTML para que el navegador no se queje de JSON
+    res.status(404).send('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>404 - No encontrado</title><style>body { font-family: sans-serif; text-align: center; margin-top: 50px; } .card { background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block; }</style></head><body><div class="card"><h1>404 - Página no encontrada</h1><p>La página que buscas no existe.</p><a href="/">Volver al inicio</a></div></body></html>');
+});
+
+// Escuchar
+app.listen(port, ()=> console.log(`Servidor escuchando en http://localhost:${port}`));

@@ -6,7 +6,31 @@
   <title>Red Social de Artesanos</title>
 </head>
 <body>
-  <h1>¡Bienvenido a la Red Social de Artesanos!</h1>
-  <p>Este es el inicio del proyecto ✨</p>
+  <h2>Subir una nueva imagen</h2>
+<form id="formularioImagen" enctype="multipart/form-data" method="POST">
+  <input type="file" name="imagen" accept="image/*" required>
+  <button type="submit">Subir Imagen</button>
+</form>
+
+<div id="mensaje"></div>
+
+<script>
+document.getElementById('formularioImagen').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+  
+  const respuesta = await fetch('/imagenes/subir', {
+    method: 'POST',
+    body: formData
+  });
+
+  const resultado = await respuesta.json();
+  document.getElementById('mensaje').innerText = resultado.mensaje || resultado.error;
+
+  // Opcional: podrías refrescar las imágenes del perfil después de subir
+});
+</script>
+
 </body>
 </html>
