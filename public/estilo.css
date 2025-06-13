@@ -1,193 +1,263 @@
 /* public/css/styles.css */
-/* public/css/styles.css */
 
+/* ---------------------------------------------------- */
+/* ESTILOS GENERALES Y RESET */
+/* ---------------------------------------------------- */
 body {
     font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
     background-color: #f4f4f4;
+    color: #333;
     margin: 0;
+    padding: 0; /* Asegura que el body no tenga padding por defecto */
+    line-height: 1.6;
+    /* Elimino 'display: flex', 'justify-content', 'align-items' de aquí,
+       ya que son más específicos para centrar una sola cosa en la página de login/registro.
+       El perfil es una página más compleja. */
 }
 
-.container {
+h1, h2, h3 {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 1.5rem; /* Margen inferior consistente */
+}
+
+p {
+    margin-bottom: 1rem;
+}
+
+/* ---------------------------------------------------- */
+/* ESTILOS PARA CONTENEDORES PRINCIPALES Y SECCIONES */
+/* ---------------------------------------------------- */
+
+/* Contenedor principal para LOGIN/REGISTRO */
+.auth-container { /* Renombrado de .container para ser más específico */
     background-color: #fff;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 350px;
     text-align: center;
+    margin: 50px auto; /* Centra el contenedor de auth horizontalmente */
 }
 
-h2 {
-    margin-bottom: 25px;
-    color: #333;
+/* Contenedor principal para PERFIL */
+.profile-card { /* Esta clase es para el div principal que envuelve todo el perfil */
+    background-color: white;
+    margin: 20px auto; /* Centra el contenido principal del perfil y da margen */
+    padding: 30px; /* Padding interno del contenedor principal del perfil */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 90%; /* Ancho flexible */
+    max-width: 960px; /* Ancho máximo para el perfil */
+    text-align: left; /* El texto en el perfil suele ser justificado o a la izquierda */
 }
 
+/* Estilos para las SECCIONES dentro del perfil */
+section {
+    padding: 1.5rem;
+    margin-top: 2rem; /* Espacio entre secciones */
+    margin-bottom: 2rem; /* Espacio entre secciones */
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    background-color: #fcfcfc; /* Un fondo ligeramente diferente para secciones */
+    text-align: center; /* Centra títulos de sección */
+}
+
+section h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* ---------------------------------------------------- */
+/* ESTILOS DE FORMULARIOS Y ELEMENTOS DE ENTRADA */
+/* ---------------------------------------------------- */
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 1rem; /* Espacio entre grupos de formulario */
     text-align: left;
 }
 
 label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 0.5rem;
     color: #555;
     font-weight: bold;
 }
 
 input[type="text"],
 input[type="email"],
-input[type="password"] {
-    width: calc(100% - 20px);
-    padding: 10px;
+input[type="password"],
+input[type="file"],
+select,
+.form-control, /* Clase para inputs generales */
+.form-select /* Clase para selectores */
+{
+    width: 100%; /* Ocupa el 100% del contenedor padre */
+    padding: 0.625rem 0.75rem; /* padding: 10px 12px; */
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 16px;
-    box-sizing: border-box; /* Asegura que el padding no añada al ancho total */
+    font-size: 1rem; /* 16px */
+    box-sizing: border-box;
+    margin-bottom: 0.5rem; /* Espacio debajo del input/select */
 }
 
-/* Estilos para los botones (generales, pero con variantes) */
-button {
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    -webkit-appearance: none; /* Elimina la flecha predeterminada en WebKit (Chrome, Safari) */
+    -moz-appearance: none; /* Elimina la flecha predeterminada en Mozilla (Firefox) */
+    appearance: none; /* Elimina la flecha predeterminada */
+}
+
+/* ---------------------------------------------------- */
+/* ESTILOS DE BOTONES */
+/* ---------------------------------------------------- */
+button, .btn {
     color: white;
-    padding: 12px 20px;
+    padding: 0.75rem 1.25rem; /* padding: 12px 20px; */
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 1rem; /* Consistente con 16px */
+    margin-top: 0.5rem; /* Espacio superior */
+    text-decoration: none; /* Para usar con enlaces con apariencia de botón */
+    display: inline-block; /* Para que ocupen solo el espacio necesario */
+    width: auto; /* Ancho automático por defecto */
+}
+
+/* Botones de formulario (login/registro) - más anchos */
+.auth-container button {
     width: 100%;
-    margin-top: 10px;
+    font-size: 1.125rem; /* 18px */
+    margin-top: 1rem;
 }
 
-/* Color específico para el botón de Registro (verde) */
-.register-button {
-    background-color: #4CAF50;
-}
-.register-button:hover {
-    background-color: #45a049;
-}
+/* Variantes de color para botones */
+.register-button, .btn-success { background-color: #4CAF50; }
+.register-button:hover, .btn-success:hover { background-color: #45a049; }
 
-/* Color específico para el botón de Login (azul) */
-.login-button {
-    background-color: #007bff;
-}
-.login-button:hover {
-    background-color: #0056b3;
-}
+.login-button, .btn-primary { background-color: #007bff; }
+.login-button:hover, .btn-primary:hover { background-color: #0056b3; }
 
+.btn-danger { background-color: #dc3545; }
+.btn-danger:hover { background-color: #c82333; }
+
+.btn-secondary { background-color: #6c757d; }
+.btn-secondary:hover { background-color: #5a6268; }
+
+.btn-warning { background-color: #ffc107; color: black; }
+.btn-warning:hover { background-color: #e0a800; }
+
+/* ---------------------------------------------------- */
+/* ESTILOS PARA MENSAJES Y ENLACES */
+/* ---------------------------------------------------- */
 .message {
-    margin-top: 20px;
-    padding: 10px;
+    margin-top: 1.25rem; /* 20px */
+    padding: 0.625rem; /* 10px */
     border-radius: 4px;
     font-weight: bold;
 }
+.message.success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+.message.error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
 
-.message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border-color: #c3e6cb;
-}
-
-.message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border-color: #f5c6cb;
-}
-
-/* Estilos para los enlaces de navegación entre formularios */
-.link-text { /* Una clase general para los enlaces de texto */
-    margin-top: 20px;
-    font-size: 14px;
+.link-text {
+    margin-top: 1.25rem;
+    font-size: 0.875rem; /* 14px */
     color: #666;
 }
+.link-text a { text-decoration: none; }
+.login-link a { color: #007bff; }
+.login-link a:hover { text-decoration: underline; }
+.register-link a { color: #4CAF50; }
+.register-link a:hover { text-decoration: underline; }
 
-.link-text a {
-    text-decoration: none;
+/* ---------------------------------------------------- */
+/* ESTILOS ESPECÍFICOS DEL PERFIL */
+/* ---------------------------------------------------- */
+
+.profile-card h1 { /* Título principal del perfil */
+    color: #5cb85c;
+    text-align: center;
+    margin-bottom: 1.5rem;
 }
 
-/* Color para el enlace de Login (azul) */
-.login-link a {
+/* Estilos de la galería de imágenes */
+.galeria {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem; /* 15px */
+    padding: 1.25rem 0; /* 20px 0 */
+}
+.imagen-item {
+    border: 1px solid #ddd;
+    padding: 0.625rem; /* 10px */
+    border-radius: 5px;
+    text-align: center;
+    background-color: #f9f9f9;
+}
+.imagen-item img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 3px;
+    margin-bottom: 0.625rem; /* 10px */
+}
+.imagen-item p {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 0.625rem;
+}
+.imagen-item .btn { /* Botón de eliminar imagen dentro de la galería */
+    font-size: 0.875rem; /* 14px */
+    padding: 0.375rem 0.75rem; /* 6px 12px */
+}
+
+/* Estilos para las tarjetas de álbumes */
+.album-card {
+    border: 1px solid #ccc;
+    padding: 1rem; /* 15px */
+    margin-bottom: 1rem; /* 10px */
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: left;
+}
+.album-card h4 {
+    margin-top: 0;
+    margin-bottom: 0.625rem; /* 10px */
     color: #007bff;
 }
-.login-link a:hover {
-    text-decoration: underline;
+.album-card p {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 0.3rem; /* Espacio reducido para info de álbum */
+}
+.album-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.625rem; /* 10px */
+    flex-wrap: wrap; /* Permite que los botones pasen a la siguiente línea si no caben */
+}
+.album-actions .btn {
+    width: auto;
 }
 
-/* Color para el enlace de Registro (verde) */
-.register-link a {
-    color: #4CAF50;
-}
-.register-link a:hover {
-    text-decoration: underline;
+/* Utilidades / Espaciadores */
+.text-center { text-align: center !important; }
+.text-muted { color: #6c757d !important; }
+
+/* Separadores */
+hr {
+    margin: 1.5rem 0;
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, .1);
+    opacity: .25;
 }
 
-.perfil-container { /* <--- ¡Nombre de clase cambiado aquí! */
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra más sutil */
-    width: 90%;
-    max-width: 600px; /* Ancho flexible para contenido */
-    text-align: center;
-}
-
-h1 { /* El h1 es para perfil.html */
-    color: #5cb85c;
-}
-p { /* El p es para perfil.html */
-    margin-bottom: 20px;
-}
-.button { /* El .button es para perfil.html */
-    background-color: #007bff;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 16px;
-    margin-top: 10px;
-    display: inline-block;
-}
-.button:hover {
-    background-color: #0056b3;
-}
-
-/* Estilos adicionales para el perfil detallado */
-
-.card {
-    padding: 30px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    width: 400px;
-    margin: 50px auto;
-    text-align: center;
-}
-
-.card h2 {
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.card p {
-    font-size: 16px;
-    color: #555;
-    margin-bottom: 10px;
-}
-
-.card button {
-    background-color: #dc3545; /* rojo para logout */
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.card button:hover {
-    background-color: #c82333;
-}
+/* Clases de espaciado que ya tenías o se simulan de Bootstrap */
+.mb-3 { margin-bottom: 1rem !important; }
+.mb-4 { margin-bottom: 1.5rem !important; }
+.me-2 { margin-right: 0.5rem !important; }
+.mt-3 { margin-top: 1rem !important; }
+/* .mt-5, .my-5, .p-4, .border, .rounded, .shadow-sm se manejan directamente en los selectores de section */

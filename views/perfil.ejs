@@ -1,91 +1,111 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></title>
-  <link rel="stylesheet" href="/estilo.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></title>
+    <link rel="stylesheet" href="/estilo.css">
 </head>
 <body>
-  <div class="card">
-        <h1>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></h1>
-    <p><strong>Email:</strong> <%= usuario.email %></p>
+    <div class="profile-card">
+        <h1>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></h1>
+        <p><strong>Email:</strong> <%= usuario.email %></p>
 
-    <h2>Mis álbumes</h2>
-    <% if (albumes.length === 0) { %>
-      <p>No tienes álbumes aún.</p>
-    <% } else { %>
-      <ul>
-        <% albumes.forEach(a => { %>
-          <li>
-                        <strong><%= a.titulo_album %></strong>
-            (<%= a.tipo_album %>) – Creado: <%= a.fecha_creacion_album %>
-          </li>
-        <% }) %>
-      </ul>
-    <% } %>
+        <section>
+            <h2 class="text-center">Mis Álbumes</h2>
 
-    <h2>Mis Imágenes Subidas</h2>
-    <% if (imagenes.length === 0) { %>
-      <p>No has subido imágenes aún.</p>
-    <% } else { %>
-      <div class="galeria">
-        <% imagenes.forEach(img => { %>
-          <div class="imagen-item">
-            <img src="/imagenes/<%= img.url_obra %>" alt="Obra" style="max-width:200px;">
-            <% if (img.titulo_obra_opcional) { %>
-              <p><%= img.titulo_obra_opcional %></p>
-            <% } %>
-            <button onclick="eliminarImagen('<%= img.url_obra %>')">Eliminar</button>
-          </div>
-        <% }) %>
-      </div>
-    <% } %>
+            <button type="button" class="btn btn-primary mb-4" id="btnCrearAlbum">
+                Crear Nuevo Álbum
+            </button>
 
-    <h3>Subir nueva imagen</h3>
-    <form id="uploadForm" enctype="multipart/form-data">
-      <input type="file" name="imagen" required><br>
-      <input type="text" name="titulo_obra_opcional" placeholder="Título opcional">
-      <button type="submit">Subir</button>
-    </form>
+            <div id="formCrearAlbumContainer" style="display: none;">
+                <h3 class="mb-3">Nuevo Álbum</h3>
+                <form id="formNuevoAlbum">
+                    <div class="form-group mb-3">
+                        <label for="tituloAlbum">Título del Álbum:</label>
+                        <input type="text" class="form-control" id="tituloAlbum" name="titulo_album" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="tipoAlbum">Tipo de Álbum:</label>
+                        <select class="form-control" id="tipoAlbum" name="tipo_album">
+                            <option value="personal">Personal</option>
+                            <option value="galeria">Galería</option>
+                            <option value="coleccion">Colección</option>
+                            <option value="evento">Evento</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success me-2">Guardar Álbum</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelarAlbum">Cancelar</button>
+                </form>
+                <hr>
+            </div>
 
-    <div id="uploadMessage"></div>
+            <div id="albumesContainer">
+                <p class="text-muted text-center" id="mensajeSinAlbumes">Cargando álbumes...</p>
+            </div>
+        </section>
 
-    <script>
-      document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+        <section>
+            <h2 class="text-center">Mis Imágenes Subidas</h2>
+            <% if (imagenes.length === 0) { %>
+                <p class="text-center">No has subido imágenes aún.</p>
+            <% } else { %>
+                <div class="galeria">
+                    <% imagenes.forEach(img => { %>
+                        <div class="imagen-item">
+                            <img src="/imagenes/<%= img.url_obra %>" alt="Obra">
+                            <% if (img.titulo_obra_opcional) { %>
+                                <p><%= img.titulo_obra_opcional %></p>
+                            <% } %>
+                            <button onclick="eliminarImagen('<%= img.url_obra %>')" class="btn btn-danger">Eliminar</button>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } %>
+        </section>
 
-        const formData = new FormData(e.target);
+        <section>
+            <h2 class="text-center">Subir Nueva Obra/Imagen</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group mb-3">
+                    <label for="imagenInput" class="form-label">Seleccionar Imagen:</label>
+                    <input type="file" class="form-control" id="imagenInput" name="imagen" accept="image/*" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="tituloObraOpcional" class="form-label">Título de la Obra (opcional):</label>
+                    <input type="text" class="form-control" id="tituloObraOpcional" name="titulo_obra_opcional" placeholder="Título opcional">
+                </div>
+                <div class="form-group mb-3">
+                    <label for="selectAlbum" class="form-label">Seleccionar Álbum:</label>
+                    <select class="form-control" id="selectAlbum" name="id_album">
+                        <option value="">(Sin álbum)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success">Subir Obra</button>
+            </form>
+            <div id="uploadMessage" class="mt-3"></div>
+        </section>
+    </div>
 
-        const response = await fetch('/api/subir-imagen', {
-          method: 'POST',
-          body: formData
-        });
+    <script>
+        // Esta función 'eliminarImagen' puede permanecer aquí o moverse a albumesFrontend.js
+        // Si tienes más funciones específicas de imágenes, un archivo 'imagenesFrontend.js'
+        // sería ideal, pero por ahora aquí está bien si solo es esta.
+        async function eliminarImagen(filename) {
+            if (!confirm('¿Estás seguro de que deseas eliminar esta imagen?')) return;
 
-        const result = await response.json();
-        document.getElementById('uploadMessage').textContent = result.message;
+            const response = await fetch(`/api/eliminar-imagen/${encodeURIComponent(filename)}`, {
+                method: 'DELETE'
+            });
 
-        if (response.ok) {
-          window.location.reload();
-        }
-      });
-
-      async function eliminarImagen(filename) {
-  if (!confirm('¿Estás seguro de que deseas eliminar esta imagen?')) return;
-
-  const response = await fetch(`/api/eliminar-imagen/${encodeURIComponent(filename)}`, {  
-    method: 'DELETE'
-  });
-
-  const result = await response.json();
-  alert(result.message);
-  if (response.ok) {
-    window.location.reload();
-  }
-}
-
-    </script>
-
-  </div>
+            const result = await response.json();
+            alert(result.message);
+            if (response.ok) {
+                window.location.reload(); // Recarga la página si la eliminación fue exitosa
+            }
+        }
+    </script>
+    <script src="/js/albumesFrontend.js"></script>
 </body>
 </html>
