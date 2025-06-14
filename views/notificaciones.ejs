@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/estilo.css"> </head>
+<body>
+    <%- include('partials/header') %> <main class="container">
+        <h1><%= title %></h1>
+
+        <% if (notificaciones && notificaciones.length > 0) { %>
+            <ul class="notification-list">
+                <% notificaciones.forEach(notificacion => { %>
+                    <li class="notification-item <%= notificacion.alerta_leida ? 'read' : 'unread' %>">
+                        <p>
+                            <%= notificacion.mensaje_alerta_breve %>
+                        </p>
+                        <span class="notification-date">
+                            <% if (notificacion.fecha_hora_alerta) { %>
+                                <%= new Date(notificacion.fecha_hora_alerta).toLocaleString('es-ES', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                            <% } else { %>
+                                Fecha no disponible
+                            <% } %>
+                        </span>
+                        
+                        <% // Si es una notificación de SOLICITUD DE AMISTAD y NO está leída %>
+                        <% if (notificacion.tipo_alerta === 'solicitud_amistad' && !notificacion.alerta_leida) { %>
+                            <div class="notification-actions">
+                                <button class="btn-action-solicitud" data-id-solicitud="<%= notificacion.id_referencia_alerta %>" data-action="aceptar">Aceptar</button>
+                                <button class="btn-action-solicitud" data-id-solicitud="<%= notificacion.id_referencia_alerta %>" data-action="rechazar">Rechazar</button>
+                            </div>
+                        <% // Si NO es una solicitud de amistad PERO aún NO está leída, muestra el botón "Marcar como leída" general %>
+                        <% } else if (!notificacion.alerta_leida) { %>
+                            <form class="mark-as-read-form" data-id="<%= notificacion.id_notificacion %>">
+                                <button type="submit">Marcar como leída</button>
+                            </form>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <p>No tienes notificaciones por el momento.</p>
+        <% } %>
+    </main>
+
+    <%- include('partials/footer') %> <script>
+        // JavaScript para manejar el marcado de notificaciones como leídas vía AJAX
+        document.querySelectorAll('.mark-as-read-form').forEach(form => {
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Evita el envío tradicional del formulario
+
+                const notificationId = this.dataset.id; // Obtiene el ID de la notificación
+                const url = `/api/notificaciones/marcar-leida/${notificationId}`; // Tu ruta API para marcar como leída
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST', // O PUT, según cómo lo tengas configurado en el backend
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        console.log('Notificación marcada como leída:', data.message);
+                        alert('Notificación marcada como leída.');
+                        // Opcional: Recargar la página o actualizar solo el elemento de la notificación
+                        window.location.reload(); 
+                    } else {
+                        console.error('Error al marcar como leída:', data.message);
+                        alert('Error al marcar como leída: ' + (data.message || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error('Error de red o del servidor:', error);
+                    alert('Ocurrió un error al intentar marcar la notificación como leída.');
+                }
+            });
+        });
+
+        
+        document.querySelectorAll('.btn-action-solicitud').forEach(button => {
+            button.addEventListener('click', async function() {
+                const idSolicitud = this.dataset.idSolicitud;
+                const action = this.dataset.action; // Esto será 'aceptar' o 'rechazar'
+
+                if (!confirm(`¿Estás seguro de que quieres ${action} esta solicitud de amistad?`)) {
+                    return; // El usuario canceló la acción
+                }
+
+                try {
+                    const response = await fetch(`/api/solicitudes-amistad/${action}/${idSolicitud}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        alert(data.message);
+                        window.location.reload(); // Recarga la página para ver los cambios
+                    } else {
+                        alert('Error: ' + (data.message || 'No se pudo procesar la solicitud.'));
+                    }
+                } catch (error) {
+                    console.error('Error de red o del servidor al procesar solicitud de amistad:', error);
+                    alert('Ocurrió un error de conexión al procesar la solicitud.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

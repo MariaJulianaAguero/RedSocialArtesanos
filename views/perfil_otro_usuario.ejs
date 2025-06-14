@@ -1,0 +1,48 @@
+<% // Suponiendo que tienes una variable 'perfilVisitado' con la información del otro usuario %>
+<% // Y una variable 'esMiPropioPerfil' para saber si es el perfil del usuario logueado %>
+
+<main class="container">
+    <h2>Perfil de <%= perfilVisitado.nombre_usuario %> <%= perfilVisitado.apellido_usuario %></h2>
+    <p>Email: <%= perfilVisitado.email %></p>
+    
+    <% if (!esMiPropioPerfil) { %>
+        <button id="enviarSolicitudAmistadBtn" 
+                data-id-destino="<%= perfilVisitado.id_usuario %>">
+            Enviar Solicitud de Amistad
+        </button>
+        <p id="mensajeSolicitud"></p>
+    <% } %>
+
+    </main>
+
+<script>
+    document.getElementById('enviarSolicitudAmistadBtn').addEventListener('click', async function() {
+        const idUsuarioDestino = this.dataset.idDestino;
+        const mensajeElement = document.getElementById('mensajeSolicitud');
+
+        try {
+            const response = await fetch('/api/solicitudes-amistad/enviar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id_usuario_recibe: idUsuarioDestino })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                mensajeElement.textContent = data.message;
+                mensajeElement.style.color = 'green';
+                this.disabled = true; // Deshabilita el botón para evitar envíos duplicados
+            } else {
+                mensajeElement.textContent = data.message || 'Error al enviar la solicitud.';
+                mensajeElement.style.color = 'red';
+            }
+        } catch (error) {
+            console.error('Error de red o del servidor:', error);
+            mensajeElement.textContent = 'Ocurrió un error de conexión.';
+            mensajeElement.style.color = 'red';
+        }
+    });
+</script>

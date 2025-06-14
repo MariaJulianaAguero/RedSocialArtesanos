@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Mi Red Social' %></title>
+    <link rel="stylesheet" href="/estilo.css"> </head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <a href="/" class="logo">Mi Red Social</a>
+            <ul>
+                <li><a href="/perfil">Mi Perfil</a></li>
+                <%
+                    // Verificar si el objeto 'usuario' existe y tiene un 'id_usuario'
+                    const isLoggedIn = (typeof usuario !== 'undefined' && usuario && usuario.id_usuario);
+                %>
+                <% if (isLoggedIn) { %>
+                    <li><a href="/notificaciones">
+                        Notificaciones
+                        <span id="notificaciones-count" class="notification-count"
+                            <% // Mostrar u ocultar el contador según si hay notificaciones %>
+                            <% if (typeof notificacionesCount === 'undefined' || notificacionesCount === 0) { %>
+                                style="display: none;"
+                            <% } %>
+                        >
+                            <% // Mostrar el número de notificaciones si es mayor que 0 %>
+                            <%= typeof notificacionesCount !== 'undefined' && notificacionesCount > 0 ? notificacionesCount : '' %>
+                        </span>
+                    </a></li>
+                    <li><a href="/logout">Cerrar Sesión</a></li>
+                <% } else { %>
+                    <li><a href="/login">Iniciar Sesión</a></li>
+                    <li><a href="/register">Registrarse</a></li>
+                <% } %>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+    

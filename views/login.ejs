@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css"> </head>
+<body>
+    <%- include('partials/header') %> <main class="container">
+        <h2>Iniciar Sesión</h2>
+        <% if (message) { %>
+            <p style="color: red;"><%= message %></p>
+        <% } %>
+        <form id="loginForm">
+            <div>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        <p>¿No tienes cuenta? <a href="/registro">Regístrate aquí</a></p>
+    </main>
+
+    <%- include('partials/footer') %> <script>
+        // Este script maneja el envío del formulario de login usando JavaScript (fetch)
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Evita que el formulario se envíe de la forma tradicional (recargando la página)
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch('/api/login', { // <-- ¡IMPORTANTE! Esta es la ruta POST a tu servidor
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password }) // Envía los datos como JSON
+                });
+
+                const data = await response.json(); // Parsea la respuesta del servidor (esperamos un JSON)
+
+                if (response.ok) { // Si la respuesta es exitosa (código 2xx)
+                    console.log('Inicio de sesión exitoso:', data.message);
+                    window.location.href = '/perfil'; // Redirige al usuario a la página de perfil después de un login exitoso
+                } else {
+                    // Si hay un error (ej. 401 Unauthorized), muestra el mensaje del servidor
+                    console.error('Error al iniciar sesión:', data.message);
+                    alert(data.message || 'Error al iniciar sesión.'); // Muestra un alert con el mensaje de error
+                }
+            } catch (error) {
+                console.error('Error de red o del servidor al intentar iniciar sesión:', error);
+                alert('Ocurrió un error de conexión. Intenta de nuevo más tarde.');
+            }
+        });
+    </script>
+</body>
+</html>

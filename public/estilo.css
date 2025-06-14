@@ -261,3 +261,424 @@ hr {
 .me-2 { margin-right: 0.5rem !important; }
 .mt-3 { margin-top: 1rem !important; }
 /* .mt-5, .my-5, .p-4, .border, .rounded, .shadow-sm se manejan directamente en los selectores de section */
+
+.text-center {
+    text-align: center;
+}
+
+.mb-3 {
+    margin-bottom: 1rem; /* 16px */
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem; /* 24px */
+}
+
+.mt-3 {
+    margin-top: 1rem; /* 16px */
+}
+
+.me-2 {
+    margin-right: 0.5rem; /* 8px */
+}
+
+/* Estilos para el perfil */
+.profile-container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-pic {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 3px solid #eee;
+}
+
+.friendship-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Espacio entre botones de amistad */
+}
+
+.profile-content section {
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-content section:last-child {
+    border-bottom: none;
+}
+
+/* Estilos para formularios */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: calc(100% - 20px); /* Ajusta el ancho para dejar padding */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Incluye padding y borde en el ancho */
+}
+
+/* Estilos para botones */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #333; /* Texto oscuro para fondo claro */
+}
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+}
+.btn-info:hover {
+    background-color: #138496;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Estilos para la galería de imágenes */
+.galeria {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Aumenté el tamaño mínimo */
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.imagen-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    background-color: #fafafa;
+}
+
+.imagen-item img {
+    max-width: 100%;
+    height: 180px; /* Altura fija para que todas las miniaturas sean uniformes */
+    object-fit: cover; /* Recorta la imagen para que encaje */
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.imagen-item p {
+    font-size: 0.9em;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* Estilos para los álbumes (si los muestras como tarjetas) */
+.albums-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.album-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    background-color: #fafafa;
+    text-align: center;
+}
+
+.album-card h3 {
+    margin-top: 0;
+    color: #007bff;
+}
+
+.album-card p {
+    font-size: 0.9em;
+    color: #666;
+}
+
+
+/* --- Estilos para la Barra de Navegación (Navbar) --- */
+
+nav.main-nav {
+    background-color: #333; /* Fondo oscuro */
+    color: white; /* Color del texto */
+    padding: 10px 20px; /* Espaciado interno */
+    display: flex; /* Para alinear elementos en fila */
+    justify-content: space-between; /* Espacio entre el logo y los enlaces */
+    align-items: center; /* Alinear verticalmente al centro */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Sombra sutil */
+}
+
+nav.main-nav .logo {
+    font-size: 1.5em; /* Tamaño del texto del logo */
+    font-weight: bold;
+    color: white;
+    text-decoration: none; /* Quitar subrayado */
+}
+
+nav.main-nav ul {
+    list-style: none; /* Quitar viñetas de la lista */
+    margin: 0;
+    padding: 0;
+    display: flex; /* Para alinear los ítems del menú en fila */
+}
+
+nav.main-nav ul li {
+    margin-left: 20px; /* Espacio entre los ítems del menú */
+}
+
+nav.main-nav ul li a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px; /* Bordes ligeramente redondeados */
+    transition: background-color 0.3s ease; /* Transición suave al pasar el ratón */
+}
+
+nav.main-nav ul li a:hover {
+    background-color: #555; /* Fondo más claro al pasar el ratón */
+}
+
+nav.main-nav .notification-count {
+    background-color: red; /* Fondo rojo para el contador */
+    color: white;
+    border-radius: 50%; /* Hacerlo circular */
+    padding: 2px 7px; /* Espaciado interno */
+    font-size: 0.8em; /* Tamaño de fuente más pequeño */
+    margin-left: 5px; /* Espacio a la izquierda del texto "Notificaciones" */
+    display: inline-block; /* Permite aplicar padding y margin como un bloque en línea */
+    min-width: 15px; /* Ancho mínimo para números de un dígito */
+    text-align: center; /* Centrar el número */
+}
+
+/* Estilos para el contenido principal para que no se pegue al header */
+main {
+    padding: 20px; /* Espaciado general para el contenido */
+    max-width: 960px; /* Ancho máximo para el contenido */
+    margin: 20px auto; /* Centrar el contenido en la página */
+    background-color: #f9f9f9; /* Color de fondo suave para el contenido */
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Estilos para el footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    background-color: #eee;
+    color: #555;
+    border-top: 1px solid #ddd;
+}
+
+/* ESTILOS PARA NOTIFICACIONES */
+
+.notification-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.notification-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    display: flex; /* Usamos flexbox para alinear el mensaje, fecha y botones */
+    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+    align-items: center; /* Alinea verticalmente los ítems */
+    justify-content: space-between; /* Distribuye el espacio entre los ítems */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.notification-item.read {
+    background-color: #f0f0f0; /* Fondo más tenue para notificaciones leídas */
+    color: #888;
+}
+
+.notification-item p {
+    flex-grow: 1; /* Permite que el mensaje ocupe el espacio disponible */
+    margin: 0; /* Elimina márgenes por defecto del párrafo */
+    padding-right: 15px; /* Espacio entre el mensaje y la fecha/acciones */
+    color: #333; /* Asegura un color de texto legible */
+}
+
+.notification-item.read p {
+    color: #888; /* Color de texto más claro para notificaciones leídas */
+}
+
+.notification-date {
+    font-size: 0.85em;
+    color: #666;
+    white-space: nowrap; /* Evita que la fecha se rompa en varias líneas */
+    margin-left: auto; /* Empuja la fecha hacia la derecha */
+    padding-left: 15px; /* Espacio entre el mensaje y la fecha */
+}
+
+.notification-item.read .notification-date {
+    color: #999;
+}
+
+/* Contenedor para los botones de acción de solicitud (Aceptar/Rechazar) */
+.notification-actions {
+    display: flex;
+    gap: 10px; /* Espacio entre los botones */
+    margin-top: 10px; /* Espacio superior si el mensaje es largo y los botones bajan */
+    margin-left: 20px; /* Separación del resto del contenido */
+    flex-shrink: 0; /* Evita que el contenedor se encoja */
+}
+
+/* Estilos específicos para los botones de Aceptar/Rechazar en notificaciones */
+/* Aprovechamos las clases ya existentes para los colores */
+.btn-action-solicitud[data-action="aceptar"] {
+    @extend .btn-success; /* Esto es pseudocódigo, usar background-color directamente */
+    background-color: #28a745; /* Verde para Aceptar */
+    color: white;
+    padding: 8px 15px; /* Ajusta el padding para estos botones */
+    font-size: 0.9em;
+}
+
+.btn-action-solicitud[data-action="aceptar"]:hover {
+    background-color: #218838;
+}
+
+.btn-action-solicitud[data-action="rechazar"] {
+    @extend .btn-danger; /* Esto es pseudocódigo, usar background-color directamente */
+    background-color: #dc3545; /* Rojo para Rechazar */
+    color: white;
+    padding: 8px 15px; /* Ajusta el padding para estos botones */
+    font-size: 0.9em;
+}
+
+.btn-action-solicitud[data-action="rechazar"]:hover {
+    background-color: #c82333;
+}
+
+/* Estilo para el formulario "Marcar como leída" dentro de la notificación */
+.mark-as-read-form {
+    margin-left: 20px; /* Espacio para separarlo del mensaje */
+    flex-shrink: 0; /* Evita que el formulario se encoja */
+    margin-top: 10px; /* Espacio superior si el mensaje es largo y el botón baja */
+}
+
+.mark-as-read-form button {
+    background-color: #007bff; /* Un color azul para "Marcar como leída" */
+    color: white;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.mark-as-read-form button:hover {
+    background-color: #0056b3;
+}
+
+
+/* RESPONSIVE DESIGN - Ajustes para pantallas más pequeñas */
+@media (max-width: 768px) {
+    .notification-item {
+        flex-direction: column; /* Apila los elementos verticalmente */
+        align-items: flex-start; /* Alinea al inicio */
+    }
+
+    .notification-item p {
+        padding-right: 0; /* Elimina padding lateral */
+        width: 100%; /* Ocupa todo el ancho */
+        margin-bottom: 10px; /* Espacio debajo del mensaje */
+    }
+
+    .notification-date {
+        margin-left: 0; /* Quita el auto-margen */
+        padding-left: 0;
+        width: 100%; /* Ocupa todo el ancho */
+        text-align: left; /* Alinea la fecha a la izquierda */
+        margin-bottom: 10px; /* Espacio debajo de la fecha */
+    }
+
+    .notification-actions,
+    .mark-as-read-form {
+        margin-left: 0; /* Quita el margen lateral */
+        width: 100%; /* Ocupa todo el ancho */
+        justify-content: flex-start; /* Alinea los botones a la izquierda */
+        margin-top: 0; /* Ajusta el margen superior */
+    }
+
+    .notification-actions button,
+    .mark-as-read-form button {
+        width: auto; /* Permite que los botones tengan su ancho natural */
+        flex-grow: 1; /* Los botones pueden crecer para ocupar el espacio disponible */
+    }
+}
