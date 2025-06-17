@@ -100,52 +100,76 @@
                 </div>
             <% } %>
 
-            <div id="albumesContainer">
-                <% if (albumes && albumes.length > 0) { %>
-                    <div class="albums-grid">
-                        <% albumes.forEach(album => { %>
-                            <div class="album-card">
-                                    <h3><%= album.nombre_album %></h3>
-                                    <p class="card-text"><small class="text-muted">Tipo: <%= album.tipo_album %></small></p>
-                                </div>
-                        <% }); %>
-                    </div>
-                <% } else { %>
-                    <p class="text-muted text-center">
-                        <%= esMiPropioPerfil ? 'No tienes álbumes creados.' : 'Este usuario no tiene álbumes creados o su portafolio no es público.' %>
-                    </p>
-                <% } %>
-            </div>
+           <div id="albumesContainer">
+    <% if (albumes && albumes.length > 0) { %>
+        <div class="albums-grid">
+            <% albumes.forEach(album => { %>
+                <div class="album-card">
+                    <% if (album.portada) { %>
+                        <img src="/portadas/<%= album.portada %>" alt="Portada de <%= album.nombre_album %>" class="album-portada" />
+                    <% } else { %>
+                        <div class="album-portada-placeholder">Sin portada</div>
+                    <% } %>
+                    <h3><%= album.nombre_album %></h3>
+                    <p class="card-text"><small class="text-muted">Tipo: <%= album.tipo_album %></small></p>
+                </div>
+            <% }); %>
+        </div>
+    <% } else { %>
+        <p class="text-muted text-center">
+            <%= esMiPropioPerfil ? 'No tienes álbumes creados.' : 'Este usuario no tiene álbumes creados o su portafolio no es público.' %>
+        </p>
+    <% } %>
+</div>
+
         </section>
 
         <section class="user-images-section">
-            <h3><%= esMiPropioPerfil ? 'Mis Obras' : 'Obras de ' + usuario.nombre_usuario %></h3>
-            <div class="image-grid">
-                <% if (obras && obras.length > 0) { %>
-                    <% obras.forEach(obra => { %>
-                        <div class="image-item">
-                            <img src="/imagenes/<%= obra.url_imagen || 'default_obra.png' %>" alt="<%= obra.titulo_obra || 'Obra de arte' %>">
-                            <% if (obra.titulo_obra) { %>
-                                <h4><%= obra.titulo_obra %></h4>
-                            <% } %>
-                            <% if (obra.precio) { %>
-                                <p>Precio: $<%= obra.precio %></p>
-                            <% } %>
-                            <% if (esMiPropioPerfil) { %>
-                                <div class="image-actions">
-                                    <button class="btn btn-sm btn-info" data-obra-id="<%= obra.id_obra %>">Editar</button>
-                                    <button class="btn btn-sm btn-danger" data-obra-id="<%= obra.id_obra %>">Eliminar</button>
-                                </div>
-                            <% } %>
-                        </div> 
-                    <% }); %> 
-                <% } else { %> 
-                    <p class="text-muted text-center">
-                        <%= esMiPropioPerfil ? 'Aún no has subido ninguna obra.' : 'Este usuario no ha subido ninguna obra aún.' %>
-                    </p>
-                <% } %> 
-            </div> 
-        </section>
+    <h3><%= esMiPropioPerfil ? 'Mis Obras' : 'Obras de ' + usuario.nombre_usuario %></h3>
+    <div class="image-grid">
+        <% if (obras && obras.length > 0) { %>
+            <% obras.forEach(obra => { %>
+                <div class="image-item">
+                    <img src="/imagenes/<%= obra.url_imagen || 'default_obra.png' %>" alt="<%= obra.titulo_obra || 'Obra de arte' %>">
+                    <% if (obra.titulo_obra) { %>
+                        <h4><%= obra.titulo_obra %></h4>
+                    <% } %>
+                    <% if (obra.precio) { %>
+                        <p>Precio: $<%= obra.precio %></p>
+                    <% } %>
+                    <% if (esMiPropioPerfil) { %>
+                        <div class="image-actions">
+                            <button class="btn btn-sm btn-info edit-obra-btn" data-obra-id="<%= obra.id_obra %>">Editar</button>
+                            <button class="btn btn-sm btn-danger delete-obra-btn" data-obra-id="<%= obra.id_obra %>">Eliminar</button>
+                        </div>
+                    <% } %>
+                    <!-- Comentarios y formulario para comentar -->
+                    <div class="comments-section" data-obra-id="<%= obra.id_obra %>">
+                        <h5 class="mb-2">Comentarios:</h5>
+                        <div class="comments-list" id="comments-list-<%= obra.id_obra %>">
+                            <p class="text-muted text-center no-comments" id="no-comments-<%= obra.id_obra %>">No hay comentarios aún.</p>
+                        </div>
+
+                        <% if (usuario) { %>
+                            <div class="add-comment-form mt-3">
+                                <h6>Añadir un comentario:</h6>
+                                <textarea class="form-control mb-2" rows="2" placeholder="Escribe tu comentario aquí..." id="comment-textarea-<%= obra.id_obra %>"></textarea>
+                                <button class="btn btn-sm btn-primary post-comment-btn" data-obra-id="<%= obra.id_obra %>">Comentar</button>
+                            </div>
+                        <% } else { %>
+                            <p class="text-muted text-center mt-3">Inicia sesión para poder comentar.</p>
+                        <% } %>
+                    </div>
+                </div> 
+            <% }); %>
+        <% } else { %>
+            <p class="text-muted text-center">
+                <%= esMiPropioPerfil ? 'Aún no has subido ninguna obra.' : 'Este usuario no ha subido ninguna obra aún.' %>
+            </p>
+        <% } %>
+    </div> 
+</section>
+
     </div> 
 </div> 
 

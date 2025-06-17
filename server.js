@@ -9,8 +9,9 @@ const fs = require('fs').promises;
 
 const albumesRoutes = require('./routes/albumesRoutes');
 const obrasRoutes = require('./routes/obrasRoutes');
+const comentariosRoutes = require('./routes/comentariosRoutes');
 const estaAutenticado = require('./middlewares/autenticacion');
-const pool = require('./conexion_bd'); 
+const pool = require('./models/db');
 const solicitudesAmistadController = require('./controllers/solicitudesAmistadController');
 
 
@@ -99,6 +100,7 @@ app.use(async (req, res, next) => {
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'registro.html')));
 app.use('/api/albumes', albumesRoutes);
 app.use('/api/obras', obrasRoutes);
+app.use('/api', comentariosRoutes);
 
 // Registro de usuario
 app.post('/api/register', async (req, res) => {
@@ -456,15 +458,24 @@ app.get('/perfil/:id', async (req, res) => {
         // Si el perfil no es público y no son amigos, quizás no deberías mostrar los álbumes/imágenes.
         let albumes = [];
         let imagenes = [];
+        let obras = []; 
 
-        if (usuario.portafolio_publico || sonAmigos || esMiPropioPerfil) { // O si es tu propio perfil
-             // Obtener álbumes
-            [albumes] = await pool.query('SELECT * FROM albumes WHERE id_usuario = ?', [perfilUsuarioId]);
-             // Obtener imágenes
-            [imagenes] = await pool.query('SELECT * FROM imagenes WHERE id_usuario = ?', [perfilUsuarioId]);
-        } else {
-            console.log(`[DEBUG - OTRO PERFIL] Portafolio de usuario ${perfilUsuarioId} no es público y no son amigos. No se cargarán álbumes/imágenes.`);
-        }
+       if (usuario.portafolio_publico || sonAmigos || esMiPropioPerfil) {
+    // Consultar álbumes (ya lo tenés hecho)
+    [albumes] = await pool.query(`
+      SELECT id_album, titulo_album AS nombre_album, tipo_album, portada
+      FROM albumes
+      WHERE id_usuario = ?
+      ORDER BY fecha_creacion_album DESC
+    `, [perfilUsuarioId]);
+
+    // Consultar imágenes (obras)
+    [obras] = await pool.query('SELECT * FROM imagenes WHERE id_usuario = ?', [perfilUsuarioId]);
+
+} else {
+    console.log(`[DEBUG - OTRO PERFIL] Portafolio de usuario ${perfilUsuarioId} no es público y no son amigos. No se cargarán álbumes/imágenes.`);
+}
+
 
 
         console.log('[DEBUG - OTRO PERFIL] Valor final de esMiPropioPerfil a enviar: ' + esMiPropioPerfil);
@@ -478,15 +489,16 @@ app.get('/perfil/:id', async (req, res) => {
             imagenesCount: imagenes.length
         });
 
-        res.render('perfil', {
-            usuario,
-            albumes,
-            imagenes,
-            esMiPropioPerfil,
-            sonAmigos,
-            solicitudPendiente,
-            solicitudRecibidaPendiente
-        });
+       res.render('perfil', {
+        usuario,
+        albumes,
+        imagenes,
+        obras, 
+        esMiPropioPerfil,
+        sonAmigos,
+        solicitudPendiente,
+        solicitudRecibidaPendiente
+    });
     } catch (error) {
         console.error('Error al obtener datos del perfil:', error);
         res.status(500).send('Error interno del servidor.');
@@ -496,38 +508,7 @@ app.get('/perfil/:id', async (req, res) => {
 
 
 
-// Eliminar imagen
-app.delete('/api/eliminar-imagen/:filename', estaAutenticado, async (req, res) => {
-    const { filename } = req.params;
-    try {
-        // ¡IMPORTANTE! Usar req.session.usuario.id_usuario
-        const userId = req.session.usuario.id_usuario; // <-- CORRECCIÓN
 
-        // Asegúrate de que la imagen pertenece al usuario antes de eliminarla
-        const [result] = await pool.query(
-            'DELETE FROM imagenes WHERE id_usuario=? AND url_obra=?',
-            [userId, filename] // <-- CORRECCIÓN
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Imagen no encontrada o no autorizada para eliminar.' });
-        }
-
-        const filePath = path.join(__dirname, 'public', 'imagenes', filename);
-        fs.unlink(filePath, err => {
-            if (err) {
-                console.error('Error al eliminar archivo físico:', err);
-                // Si el archivo no se puede eliminar, esto no debería impedir que la DB se actualice,
-                // pero es bueno loguearlo.
-            }
-        });
-
-        res.json({ message: 'Imagen eliminada correctamente.' });
-    } catch (e) {
-        console.error('Error en la ruta DELETE /api/eliminar-imagen:', e);
-        res.status(500).json({ message: 'Error interno al eliminar imagen.' });
-    }
-});
 
 // Ruta para OBTENER todos los álbumes del usuario actual
 app.get('/api/albumes', async (req, res) => {

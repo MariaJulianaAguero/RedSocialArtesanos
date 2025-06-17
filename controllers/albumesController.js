@@ -1,6 +1,7 @@
 // controllers/albumesController.js
 const albumModel = require('../models/albumModel'); // <--- ¡VERIFICA ESTA RUTA!
 const imagenModel = require('../models/obraModel'); // <--- ¡VERIFICA ESTA RUTA!
+const pool = require('../models/db');
 
 const albumesController = {
     // [GET] /api/albumes - Obtener todos los álbumes del usuario autenticado

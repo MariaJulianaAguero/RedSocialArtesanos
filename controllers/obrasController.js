@@ -4,8 +4,9 @@
 // --- REQUERIMIENTOS ---
 // Asegúrate de que estas rutas sean correctas según la ubicación de tus archivos.
 const obraModel = require('../models/obraModel');
+const fs = require('fs').promises; 
 const path = require('path'); // Para manejar rutas de archivos
-const fs = require('fs');     // Para interactuar con el sistema de archivos (eliminar archivos)
+   
 
 // --- CONFIGURACIÓN DE MULTER ---
 // Si tu configuración de Multer (el 'storage' y el 'upload') está en este archivo,
@@ -36,52 +37,50 @@ const upload = multer({ storage: storage });
 // Esta función ahora espera un id_album en el cuerpo de la solicitud (req.body.id_album)
 // y lo usa para vincular la imagen al álbum.
 exports.subirImagen = async (req, res) => {
-    // req.file es proporcionado por Multer después de la subida
     if (!req.file) {
         return res.status(400).json({ message: 'No se recibió ninguna imagen.' });
     }
 
-    // Asegúrate de que 'userId' es la clave correcta en tu sesión
-    const usuarioId = req.session.userId;
+    // CORRECCIÓN 1: Usar req.session.usuario.id_usuario según tus logs de autenticación
+    const usuarioId = req.session.usuario?.id_usuario; // Acceso seguro con optional chaining
     if (!usuarioId) {
-        // Si no hay un usuario autenticado, no se puede subir la imagen
         return res.status(401).json({ message: 'No autorizado. Debes iniciar sesión para subir imágenes.' });
     }
 
-    const nombreArchivo = req.file.filename; // Nombre del archivo generado por Multer
-    const tituloObraOpcional = req.body.titulo_obra_opcional || null; // Título opcional, si se envía desde el frontend
-    const idAlbum = req.body.id_album || null; // ID del álbum, si se envía desde el frontend (puede ser null)
+    // CORRECCIÓN 2: Construir la url_obra correctamente con el prefijo /imagenes/
+    const urlObraParaDB = '/imagenes/' + req.file.filename; // <-- ¡ESTA ES LA CLAVE!
 
-    // *** NUEVOS CAMPOS: descripcion_obra y precio si los vas a manejar desde el frontend ***
-    // Si tu formulario de subida en perfil.ejs va a incluir estos campos:
-    const descripcionObra = req.body.descripcion_obra || null; // Asegúrate de que el input en el frontend tenga name="descripcion_obra"
-    const precio = req.body.precio ? parseFloat(req.body.precio) : 0.00; // Asegúrate de que el input en el frontend tenga name="precio"
+    const tituloObraOpcional = req.body.titulo_obra_opcional || null;
+    const idAlbum = req.body.id_album || null;
+
+    const descripcionObra = req.body.descripcion_obra || null;
+
+    // CORRECCIÓN 3: Manejo de precio. Si es un string vacío, hazlo 0.00 o null.
+    // parseFloat convierte '' a NaN, por eso la verificación.
+    const precio = req.body.precio ? parseFloat(req.body.precio) : 0.00;
+    // Si prefieres que sea NULL si no se ingresa nada:
+    // const precio = req.body.precio ? parseFloat(req.body.precio) : null;
+
 
     try {
-        // Llama a la función del modelo para crear la entrada en la tabla 'obras'
-        // ¡CAMBIO IMPORTANTE: Ahora se usa obraModel.createObra!
         const newObraId = await obraModel.createObra(
             usuarioId,
             idAlbum,
-            nombreArchivo,
+            urlObraParaDB, // <-- ¡PASAR LA URL CORREGIDA AL MODELO!
             tituloObraOpcional,
-            descripcionObra, // Pasa la descripción
-            precio // Pasa el precio
+            descripcionObra,
+            precio
         );
 
-        // Envía una respuesta JSON exitosa al frontend
         res.status(201).json({
-            message: 'Obra subida y registrada correctamente.', // Mensaje actualizado
-            url: `/obras/${nombreArchivo}`, // URL pública para acceder a la obra (asumiendo que las obras se servirán desde /public/obras o similar)
-            id_obra: newObraId, // ID de la nueva obra (antes id_imagen)
-            id_album: idAlbum // Confirma el ID del álbum al que se asoció (o null)
+            message: 'Obra subida y registrada correctamente.',
+            url: urlObraParaDB, // Devolver la URL correcta al frontend para que la use si es necesario
+            id_obra: newObraId,
+            id_album: idAlbum
         });
 
     } catch (error) {
         console.error('Error al subir obra y registrar en la base de datos:', error);
-        // Si hay un error en la base de datos, intenta eliminar el archivo físico subido por Multer
-        // para evitar archivos "huérfanos".
-        // La ruta del archivo es req.file.path (ej: public/uploads/nombre.jpg)
         fs.unlink(req.file.path, (err) => {
             if (err) console.error('Error al eliminar archivo fallido del servidor:', err);
         });
@@ -89,57 +88,122 @@ exports.subirImagen = async (req, res) => {
     }
 };
 
-// Función para eliminar una imagen
-// Espera el nombre del archivo en los parámetros de la URL (req.params.filename)
-// y requiere que el usuario esté autenticado y sea el dueño de la imagen.
-exports.eliminarObra = async (req, res) => { // ¡CAMBIO DE NOMBRE DE FUNCIÓN!
-    // Ahora obtenemos el ID de la obra de los parámetros de la URL
-    const idObra = req.params.idObra; // Asegúrate de que tu ruta sea '/api/obras/:idObra'
-    const userId = req.session.userId; // Asegúrate de que 'userId' es la clave correcta en tu sesión
+// controllers/obrasController.js (parte del archivo, no el archivo completo)
 
-    if (!userId) {
-        return res.status(401).json({ message: 'No autorizado. Debes iniciar sesión para eliminar obras.' });
+exports.subirObra = async (req, res) => {
+    console.log('[BACKEND DEBUG - obrasController] Entrando a subirObra en el controlador.');
+    console.log('[BACKEND DEBUG - obrasController] req.file (desde Multer):', req.file);
+    console.log('[BACKEND DEBUG - obrasController] req.body (desde Multer):', req.body);
+
+    const usuarioId = req.session.usuario ? req.session.usuario.id_usuario : null;
+
+    // --- Validación inicial de usuario y archivo ---
+    if (!usuarioId) {
+        if (req.file) {
+            try {
+                await fs.unlink(req.file.path);
+                console.warn(`[BACKEND DEBUG] Archivo ${req.file.path} eliminado debido a falta de usuario autenticado.`);
+            } catch (unlinkErr) {
+                console.error(`[BACKEND ERROR] Fallo al eliminar archivo ${req.file.path} (sin autenticación):`, unlinkErr);
+            }
+        }
+        return res.status(401).json({ success: false, message: 'No autorizado. Debes iniciar sesión para subir obras.' });
     }
 
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No se recibió ninguna imagen de obra. Asegúrate de seleccionar un archivo.' });
+    }
+    // --- FIN Validación inicial ---
+
+    // --- Aquí comienza el bloque de código que preguntaste ---
+    const { titulo_obra_opcional, id_album, descripcion_obra, precio } = req.body;
+    const nombreArchivo = req.file.filename;
+
+    // Calcula el precio numérico aquí
+    const precioNumerico = precio ? parseFloat(precio) : 0.00;
+
+    try {
+        // Llama a la función del modelo para insertar la obra
+        const newObraId = await obraModel.createObra(
+            usuarioId,
+            id_album || null, // Pasa null si no hay id_album
+            nombreArchivo,
+            titulo_obra_opcional || null, // Pasa null si no hay título opcional
+            descripcion_obra || null, // Pasa null si no hay descripción
+            precioNumerico
+        );
+
+        console.log('[BACKEND DEBUG - obrasController] Obra creada exitosamente en BD con ID:', newObraId);
+
+        res.status(201).json({
+            success: true,
+            message: 'Obra subida y registrada correctamente.',
+            id_obra: newObraId,
+            url_obra: nombreArchivo, // Puedes devolver solo el nombre del archivo
+            titulo_obra_opcional: titulo_obra_opcional,
+            descripcion_obra: descripcion_obra,
+            precio: precioNumerico,
+            fecha_subida_obra: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('[BACKEND ERROR - obrasController] Error al subir obra y registrar en la base de datos:', error);
+
+        // Si hay un error al insertar en la DB, elimina el archivo que Multer ya guardó
+        if (req.file) {
+            try {
+                await fs.unlink(req.file.path);
+                console.log(`[BACKEND DEBUG] Archivo ${req.file.path} eliminado debido a error en DB.`);
+            } catch (unlinkError) {
+                console.error('[BACKEND ERROR] Error al eliminar archivo de obra fallido del servidor:', unlinkError);
+            }
+        }
+        res.status(500).json({ success: false, message: 'Error interno del servidor al procesar la obra.' });
+    }
+}; // Fin de exports.subirObra
+
+// Asegúrate de que tu función 'eliminarObra' también importe 'fs.promises' y 'path'
+// y use 'url_obra' correctamente. Debería ser similar a esto:
+exports.eliminarObra = async (req, res) => {
+    const { idObra } = req.params;
+    const userId = req.session.usuario?.id_usuario;
+
+    if (!userId) {
+        return res.status(401).json({ success: false, message: 'No autenticado.' });
+    }
     if (!idObra) {
-        return res.status(400).json({ message: 'ID de obra no proporcionado para la eliminación.' });
+        return res.status(400).json({ success: false, message: 'ID de obra no proporcionado.' });
     }
 
     try {
-        // Llama a la función del modelo para eliminar la obra de la base de datos y obtener la URL del archivo
-        // El modelo debe devolver la URL del archivo para que el controlador lo elimine del disco
-        const result = await obraModel.deleteObra(idObra, userId); // ¡CAMBIO IMPORTANTE!
+        const result = await obraModel.deleteObra(idObra, userId);
 
         if (result.success) {
-            // Si la eliminación de la DB fue exitosa, procede a eliminar el archivo físico
-            if (result.url_obra) { // Asegúrate de que el modelo devuelva la URL
-                const filePath = `./public/uploads/${result.url_obra}`; // Ajusta esta ruta a donde Multer guarda los archivos
-                fs.unlink(filePath, (err) => {
-                    if (err) {
-                        console.error(`Error al eliminar archivo físico ${filePath}:`, err);
-                        // Aunque falle la eliminación física, la entrada de la DB ya se eliminó,
-                        // así que la operación lógica fue exitosa. Podrías registrar este error.
-                    }
-                    // No es crítico para la respuesta al cliente si la DB se actualizó
-                });
+            if (result.url_obra) {
+                const filePath = path.join(__dirname, '..', 'public', 'imagenes', result.url_obra);
+                try {
+                    await fs.unlink(filePath);
+                    console.log(`[BACKEND DEBUG] Archivo físico ${filePath} eliminado.`);
+                } catch (fileError) {
+                    console.warn(`[BACKEND WARNING] No se pudo eliminar el archivo físico ${filePath}:`, fileError.message);
+                }
             }
-            res.json({ message: result.message }); // Éxito en la eliminación
+            res.status(200).json({ success: true, message: result.message });
         } else {
-            // Error si la obra no se encontró o el usuario no está autorizado
-            res.status(404).json({ message: result.message });
+            res.status(result.message.includes('encontrada') ? 404 : 403).json({ success: false, message: result.message });
         }
     } catch (error) {
-        console.error('Error en la función eliminarObra del controlador:', error);
-        res.status(500).json({ message: 'Error interno del servidor al eliminar la obra.' });
+        console.error('[BACKEND ERROR] Error en eliminarObra del controlador:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor al intentar eliminar la obra.' });
     }
 };
 
-// --- EXPORTACIONES ---
-// Exporta las funciones que deseas usar en tus rutas
-module.exports = {
-    // Si tu Multer 'upload' se configura aquí y lo usas en las rutas, también expórtalo:
-    upload, // Asumo que 'upload' está definido en alguna parte de este archivo o importado
-    subirImagen: exports.subirImagen, // Mantengo el nombre del key, pero la función se refiere a obras
-    eliminarObra: exports.eliminarObra // ¡CAMBIO IMPORTANTE!
-};
 
+
+
+module.exports = {
+    upload,
+    subirImagen: exports.subirImagen,
+    subirObra: exports.subirObra, 
+    eliminarObra: exports.eliminarObra
+};
