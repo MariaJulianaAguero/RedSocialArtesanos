@@ -1,12 +1,12 @@
 // controllers/albumesController.js
 const albumModel = require('../models/albumModel'); // <--- ¡VERIFICA ESTA RUTA!
-const imagenModel = require('../models/imagenModel'); // <--- ¡VERIFICA ESTA RUTA!
+const imagenModel = require('../models/obraModel'); // <--- ¡VERIFICA ESTA RUTA!
 
 const albumesController = {
     // [GET] /api/albumes - Obtener todos los álbumes del usuario autenticado
     getAlbums: async (req, res) => {
         try {
-            const userId = req.session.userId;
+            const userId = req.session.usuario?.id_usuario;
             if (!userId) {
                 return res.status(401).json({ message: 'No autenticado.' });
             }
@@ -23,7 +23,7 @@ const albumesController = {
     getAlbumDetails: async (req, res) => {
         try {
             const albumId = req.params.id_album;
-            const userId = req.session.userId;
+            const userId = req.session.usuario.id_usuario;
 
             if (!userId) {
                 return res.status(401).json({ message: 'No autenticado.' });
@@ -49,7 +49,7 @@ const albumesController = {
     // [POST] /api/albumes - Crear un nuevo álbum
     createAlbum: async (req, res) => {
         try {
-            const userId = req.session.userId;
+            const userId = req.session.usuario.id_usuario;
             if (!userId) {
                 return res.status(401).json({ message: 'No autenticado.' });
             }
@@ -71,7 +71,7 @@ const albumesController = {
     updateAlbum: async (req, res) => {
         try {
             const albumId = req.params.id_album;
-            const userId = req.session.userId;
+            const userId = req.session.usuario.id_usuario;
             if (!userId) {
                 return res.status(401).json({ message: 'No autenticado.' });
             }
@@ -101,7 +101,7 @@ const albumesController = {
     deleteAlbum: async (req, res) => {
         try {
             const albumId = req.params.id_album;
-            const userId = req.session.userId;
+            const userId = req.session.usuario.id_usuario;
             if (!userId) {
                 return res.status(401).json({ message: 'No autenticado.' });
             }

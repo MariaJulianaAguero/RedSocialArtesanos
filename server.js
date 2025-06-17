@@ -1,17 +1,19 @@
 require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql2'); // Aunque usas pool, esto está bien
+const mysql = require('mysql2'); 
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const session = require('express-session');
 const multer = require('multer');
-const fs = require('fs');
+const fs = require('fs').promises;
 
 const albumesRoutes = require('./routes/albumesRoutes');
-const { estaAutenticado } = require('./middleware/autenticacion'); // Este es el middleware que necesitamos ajustar
-const imagenesController = require('./controllers/imagenesController'); // Parece que no se usa directamente aquí, pero está bien
-const pool = require('./conexion_bd'); // Tu pool de conexiones
+const obrasRoutes = require('./routes/obrasRoutes');
+const estaAutenticado = require('./middlewares/autenticacion');
+const pool = require('./conexion_bd'); 
 const solicitudesAmistadController = require('./controllers/solicitudesAmistadController');
+
+
 
 // --- INICIO CÓDIGO NUEVO PARA NOTIFICACIONES (FUNCIÓN AUXILIAR) ---
 
@@ -26,29 +28,20 @@ async function insertarNotificacion(idUsuarioDestino, tipoAlerta, idReferenciaAl
         console.log(`[DEBUG - Notificación] Notificación '${tipoAlerta}' creada para usuario ${idUsuarioDestino}.`);
     } catch (error) {
         console.error('Error al insertar notificación:', error);
-        // Aquí podrías querer manejar el error de forma más elegante, quizás loguearlo sin detener la ejecución principal.
+        
     }
 }
 
 // --- FIN CÓDIGO NUEVO PARA NOTIFICACIONES (FUNCIÓN AUXILIAR) ---
 
 const app = express();
-// require('dotenv').config(); // Ya se hizo al inicio, puedes quitar esta línea si no la necesitas doble
+
 
 console.log('¡Servidor de IMÁGENES iniciando! Versión: 2025-06-12_FINAL');
 
 const port = process.env.PORT || 3000;
 
-// Configuración multer
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'public/imagenes'),
-    filename: (req, file, cb) => {
-        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
-        cb(null, unique + ext);
-    }
-});
-const upload = multer({ storage });
+
 
 // EJS
 app.set('view engine', 'ejs');
@@ -62,9 +55,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/imagenes', express.static(path.join(__dirname,'public','imagenes')));
 
 
-// Sesiones - ¡DEBE IR ANTES DE CUALQUIER RUTA O MIDDLEWARE QUE USE req.session!
+
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'EstaEsUnaClaveSecretisimaParaMiProyectoDeArtesanos', // <-- CAMBIA ESTO A UNA CADENA LARGA Y ÚNICA
+    secret: process.env.SESSION_SECRET || 'EstaEsUnaClaveSecretisimaParaMiProyectoDeArtesanos', 
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false, maxAge: 1000 * 60 * 60 * 24 } // secure: true en producción con HTTPS
@@ -75,8 +68,7 @@ app.use(express.json()); // Para solicitudes con cuerpo JSON
 app.use(express.urlencoded({ extended: true })); // Para solicitudes con cuerpo URL-encoded (formularios HTML)
 
 
-// Middleware para hacer `req.session.usuario` y `notificacionesCount` disponibles en todas las vistas EJS
-// ¡IMPORTANTE! Este middleware debe ir DESPUÉS de la configuración de `express-session`
+
 app.use(async (req, res, next) => {
     // Si req.session.usuario no existe, res.locals.usuario será null
     res.locals.usuario = req.session.usuario || null;
@@ -101,9 +93,12 @@ app.use(async (req, res, next) => {
 });
 
 
+
+
 // Rutas
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'registro.html')));
 app.use('/api/albumes', albumesRoutes);
+app.use('/api/obras', obrasRoutes);
 
 // Registro de usuario
 app.post('/api/register', async (req, res) => {
@@ -121,12 +116,14 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
+
+
 // Login de usuario
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const [rows] = await pool.query(
-            'SELECT * FROM usuarios WHERE email = ?', // <-- CORRECCIÓN: 'email' a 'email_usuario'
+            'SELECT * FROM usuarios WHERE email = ?', 
             [email]
         );
         if (rows.length === 0) return res.status(401).json({ message: 'Usuario no encontrado.' });
@@ -140,10 +137,10 @@ app.post('/api/login', async (req, res) => {
             id_usuario: usuario.id_usuario,
             nombre_usuario: usuario.nombre_usuario,
             apellido_usuario: usuario.apellido_usuario,
-            email: usuario.email, // Añadir el email también
-            url_foto_perfil: usuario.url_foto_perfil, // Asegúrate de que este campo exista en tu DB
-            intereses_usuario: usuario.intereses_usuario, // Asegúrate de que este campo exista en tu DB
-            antecedentes_usuario: usuario.antecedentes_usuario // Asegúrate de que este campo exista en tu DB
+            email: usuario.email, 
+            url_foto_perfil: usuario.url_foto_perfil, 
+            intereses_usuario: usuario.intereses_usuario,
+            antecedentes_usuario: usuario.antecedentes_usuario 
         };
 
         res.json({ message: 'Inicio de sesión exitoso.' });
@@ -154,8 +151,8 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Ruta para enviar solicitud de amistad
-app.post('/enviar-solicitud-amistad', estaAutenticado, async (req, res) => { // <-- Se añadió estaAutenticado
-    // ¡IMPORTANTE! Ya no necesitas verificar req.session.usuario aquí, lo hace estaAutenticado
+app.post('/enviar-solicitud-amistad', estaAutenticado, async (req, res) => { 
+    
     const idSolicitante = req.session.usuario.id_usuario;
     const nombreSolicitante = `${req.session.usuario.nombre_usuario} ${req.session.usuario.apellido_usuario}`;
     const idReceptor = req.body.id_receptor;
@@ -165,7 +162,7 @@ app.post('/enviar-solicitud-amistad', estaAutenticado, async (req, res) => { // 
     }
 
     try {
-        // ... (Tu lógica existente para verificar solicitudes y amistades) ...
+        // ... (lógica existente para verificar solicitudes y amistades) ...
         const [existingSolicitud] = await pool.query(
             `SELECT estado_solicitud FROM solicitudesdeamistad
              WHERE (id_usuario_envia = ? AND id_usuario_recibe = ?)
@@ -223,8 +220,8 @@ app.post('/enviar-solicitud-amistad', estaAutenticado, async (req, res) => { // 
 });
 
 // Ruta para responder a una solicitud de amistad (aceptar/rechazar)
-app.post('/responder-solicitud-amistad', estaAutenticado, async (req, res) => { // <-- Se añadió estaAutenticado
-    // ¡IMPORTANTE! Ya no necesitas verificar req.session.usuario aquí, lo hace estaAutenticado
+app.post('/responder-solicitud-amistad', estaAutenticado, async (req, res) => { 
+   
     const idUsuarioResponde = req.session.usuario.id_usuario;
     const nombreUsuarioResponde = `${req.session.usuario.nombre_usuario} ${req.session.usuario.apellido_usuario}`;
     const { id_solicitud, accion } = req.body;
@@ -326,22 +323,22 @@ app.get('/perfil', estaAutenticado, async (req, res) => {
     try {
         console.log('[DEBUG - PROPIO PERFIL] Ruta /perfil (propio) alcanzada.');
 
-        // ¡IMPORTANTE! Usar req.session.usuario.id_usuario consistentemente
+       
         const [usuarioData] = await pool.query(
             'SELECT id_usuario, nombre_usuario, apellido_usuario, email, intereses_usuario, antecedentes_usuario, url_foto_perfil, portafolio_publico FROM usuarios WHERE id_usuario = ?',
-            [req.session.usuario.id_usuario] // <-- CORRECCIÓN
+            [req.session.usuario.id_usuario] 
         );
         const usuario = usuarioData[0];
 
         const [albumesData] = await pool.query(
             'SELECT * FROM albumes WHERE id_usuario = ?',
-            [req.session.usuario.id_usuario] // <-- CORRECCIÓN
+            [req.session.usuario.id_usuario] 
         );
 
         const [imagenesData] = await pool.query(
-            'SELECT * FROM imagenes WHERE id_usuario = ?',
-            [req.session.usuario.id_usuario] // <-- CORRECCIÓN
-        );
+        'SELECT * FROM obras WHERE id_usuario = ?', // CAMBIADO 'imagenes' a 'obras'
+        [req.session.usuario.id_usuario]
+    );
 
         console.log('[DEBUG - PROPIO PERFIL] Valor de esMiPropioPerfil a enviar: true');
         console.log('[DEBUG - PROPIO PERFIL] Objeto de renderización (PARCIAL):', {
@@ -354,11 +351,11 @@ app.get('/perfil', estaAutenticado, async (req, res) => {
         res.render('perfil', {
             usuario,
             albumes: albumesData,
-            imagenes: imagenesData,
+            obras: imagenesData,
             esMiPropioPerfil: true,
             sonAmigos: false,
-            solicitudPendiente: null, // <-- CORRECCIÓN: Usar null en lugar de false para un objeto
-            solicitudRecibidaPendiente: null // <-- CORRECCIÓN: Usar null en lugar de false para un objeto
+            solicitudPendiente: null, 
+            solicitudRecibidaPendiente: null 
         });
     } catch (err) {
         console.error('--- ERROR DETALLADO EN RUTA /perfil (propio) ---');
@@ -497,30 +494,7 @@ app.get('/perfil/:id', async (req, res) => {
 });
 
 
-// Subir imagen
-app.post('/api/subir-imagen', estaAutenticado, upload.single('imagen'), async (req, res) => {
-    try {
-        // ¡IMPORTANTE! Usar req.session.usuario.id_usuario
-        const userId = req.session.usuario.id_usuario; // <-- CORRECCIÓN
 
-        if (!req.file) {
-            return res.status(400).json({ message: 'No se ha proporcionado ningún archivo de imagen.' });
-        }
-
-        const filename = req.file.filename;
-        const titulo = req.body.titulo_obra_opcional || null;
-        const idAlbum = req.body.id_album || null; // Asegúrate de que el campo sea 'id_album' en el formulario
-
-        await pool.query(
-            'INSERT INTO imagenes (id_usuario, url_obra, titulo_obra_opcional, id_album) VALUES (?,?,?,?)', // <-- Añadir id_album
-            [userId, filename, titulo, idAlbum] // <-- CORRECCIÓN
-        );
-        res.status(201).json({ message: 'Imagen subida exitosamente', filename, titulo });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: 'Error interno al subir imagen' });
-    }
-});
 
 // Eliminar imagen
 app.delete('/api/eliminar-imagen/:filename', estaAutenticado, async (req, res) => {
@@ -554,6 +528,68 @@ app.delete('/api/eliminar-imagen/:filename', estaAutenticado, async (req, res) =
         res.status(500).json({ message: 'Error interno al eliminar imagen.' });
     }
 });
+
+// Ruta para OBTENER todos los álbumes del usuario actual
+app.get('/api/albumes', async (req, res) => {
+    // Asegúrate de que el usuario esté autenticado
+    if (!req.session.usuario || !req.session.usuario.id_usuario) {
+        console.error("Acceso no autorizado a /api/albumes - Usuario no logueado");
+        return res.status(401).json({ message: 'Acceso no autorizado.' });
+    }
+
+    const id_usuario = req.session.usuario.id_usuario;
+    console.log(`[BACKEND DEBUG] Solicitud GET /api/albumes para usuario: ${id_usuario}`);
+
+    try {
+        const [rows] = await pool.query('SELECT id_album, nombre_album, tipo_album FROM albumes WHERE id_usuario = ? ORDER BY nombre_album ASC', [id_usuario]);
+        console.log("[BACKEND DEBUG] Álbumes obtenidos:", rows);
+        res.json(rows);
+    } catch (error) {
+        console.error('Error al obtener álbumes:', error);
+        res.status(500).json({ message: 'Error interno del servidor al obtener álbumes.' });
+    }
+});
+
+// Ruta para CREAR un nuevo álbum
+app.post('/api/albumes', async (req, res) => {
+    // Asegúrate de que el usuario esté autenticado
+    if (!req.session.usuario || !req.session.usuario.id_usuario) {
+        console.error("Acceso no autorizado a /api/albumes (POST) - Usuario no logueado");
+        return res.status(401).json({ message: 'Acceso no autorizado.' });
+    }
+
+    const id_usuario = req.session.usuario.id_usuario;
+    const { nombre_album, tipo_album } = req.body; // Asegúrate de que estos nombres coinciden con lo que envía el frontend
+
+    console.log(`[BACKEND DEBUG] Solicitud POST /api/albumes para usuario: ${id_usuario}, nombre: ${nombre_album}, tipo: ${tipo_album}`);
+
+    if (!nombre_album) {
+        console.error("[BACKEND DEBUG] Falta nombre_album en la solicitud POST /api/albumes");
+        return res.status(400).json({ message: 'El nombre del álbum es requerido.' });
+    }
+
+    try {
+        const [result] = await pool.query(
+            'INSERT INTO albumes (id_usuario, nombre_album, tipo_album) VALUES (?, ?, ?)',
+            [id_usuario, nombre_album, tipo_album || null] // Permite que tipo_album sea NULL si no se envía
+        );
+        console.log("[BACKEND DEBUG] Álbum creado:", result);
+        res.status(201).json({ 
+            message: 'Álbum creado exitosamente.', 
+            id_album: result.insertId,
+            nombre_album: nombre_album,
+            tipo_album: tipo_album
+        });
+    } catch (error) {
+        console.error('Error al crear álbum:', error);
+        // Manejo específico para el error de duplicado (si el nombre del álbum debe ser único para el usuario)
+        if (error.code === 'ER_DUP_ENTRY') { // Código de error MySQL para entrada duplicada
+            return res.status(409).json({ message: 'Ya existe un álbum con ese nombre.' });
+        }
+        res.status(500).json({ message: 'Error interno del servidor al crear el álbum.' });
+    }
+});
+
 
 // Ruta para cerrar sesión
 app.get('/logout', (req, res) => {

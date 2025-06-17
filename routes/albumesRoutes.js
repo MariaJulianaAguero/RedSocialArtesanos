@@ -1,8 +1,8 @@
 // routes/albumesRoutes.js
 const express = require('express');
-const router = express.Router(); // Creamos una instancia de Router de Express
-const albumesController = require('../controllers/albumesController'); // Asegúrate de que esta ruta sea correcta
-const { estaAutenticado } = require('../middleware/autenticacion'); // Importa tu middleware de autenticación
+const router = express.Router(); 
+const albumesController = require('../controllers/albumesController'); 
+const estaAutenticado = require('../middlewares/autenticacion'); // <-- ¡SIN LLAVES {}!
 
 // --- RUTAS DE ÁLBUMES ---
 

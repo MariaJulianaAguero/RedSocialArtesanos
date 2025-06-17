@@ -1,141 +1,155 @@
 <%- include('partials/header', { title: `Perfil de ${usuario.nombre_usuario} ${usuario.apellido_usuario}`, usuario: usuario, notificacionesCount: notificacionesCount }) %>
 
-    <div class="profile-container">
-        <div class="profile-header">
-            <img src="/imagenes/<%= usuario.url_foto_perfil || 'default_profile.png' %>" alt="Foto de perfil" class="profile-pic">
-            <h1>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></h1>
-            <p><strong>Email:</strong> <%= usuario.email %></p>
-            <% if (usuario.intereses_usuario) { %>
-                <p><strong>Intereses:</strong> <%= usuario.intereses_usuario %></p>
-            <% } %>
-            <% if (usuario.antecedentes_usuario) { %>
-                <p><strong>Antecedentes:</strong> <%= usuario.antecedentes_usuario %></p>
-            <% } %>
 
-            <% if (!esMiPropioPerfil) { %>
-                <div class="friendship-actions">
-                    <% if (sonAmigos) { %>
-                        <button class="btn btn-secondary" disabled>Amigos</button>
-                    <% } else if (solicitudPendiente) { %>
-                        <button class="btn btn-warning" disabled>Solicitud Enviada</button>
-                    <% } else if (solicitudRecibidaPendiente) { %>
-                                                <p>Solicitud de Amistad Recibida de <%= usuario.nombre_usuario %>:</p>
-                        <button class="btn btn-success" id="btnAceptarSolicitud" data-solicitud-id="<%= solicitudRecibidaPendiente.id_solicitud %>">Aceptar</button>
-                        <button class="btn btn-danger" id="btnRechazarSolicitud" data-solicitud-id="<%= solicitudRecibidaPendiente.id_solicitud %>">Rechazar</button>
-                    <% } else { %>
-                        <button id="sendFriendRequestBtn" class="btn btn-primary" data-user-id="<%= usuario.id_usuario %>">Enviar Solicitud de Amistad</button>
-                    <% } %>
-                </div>
-                <p id="friendshipMessage" style="margin-top: 10px; text-align: center;"></p>
-            <% } %>
-            </div>
-            
-        </div>
+<div class="profile-container">
+    <div class="profile-header">
+        <img src="/imagenes/<%= usuario.url_foto_perfil || 'default_profile.png' %>" alt="Foto de perfil" class="profile-pic">
+        <h1>Perfil de <%= usuario.nombre_usuario %> <%= usuario.apellido_usuario %></h1>
+        <p><strong>Email:</strong> <%= usuario.email %></p>
+        <% if (usuario.intereses_usuario) { %>
+            <p><strong>Intereses:</strong> <%= usuario.intereses_usuario %></p>
+        <% } %>
+        <% if (usuario.antecedentes_usuario) { %>
+            <p><strong>Antecedentes:</strong> <%= usuario.antecedentes_usuario %></p>
+        <% } %>
 
-        <div class="profile-content">
-            <section>
-                <h2 class="text-center">
-                    <%= esMiPropioPerfil ? 'Mis Álbumes' : 'Álbumes de ' + usuario.nombre_usuario %>
-                </h2>
-
-                <% if (esMiPropioPerfil) { %>
-                    <button type="button" class="btn btn-primary mb-4" id="btnCrearAlbum">
-                        Crear Nuevo Álbum
-                    </button>
-
-                    <div id="formCrearAlbumContainer" style="display: none;">
-                        <h3 class="mb-3">Nuevo Álbum</h3>
-                        <form id="formNuevoAlbum">
-                            <div class="form-group mb-3">
-                                <label for="tituloAlbum">Título del Álbum:</label>
-                                <input type="text" class="form-control" id="tituloAlbum" name="titulo_album" required>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="tipoAlbum">Tipo de Álbum:</label>
-                                <select class="form-control" id="tipoAlbum" name="tipo_album">
-                                    <option value="personal">Personal</option>
-                                    <option value="galeria">Galería</option>
-                                    <option value="coleccion">Colección</option>
-                                    <option value="evento">Evento</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-success me-2">Guardar Álbum</button>
-                            <button type="button" class="btn btn-secondary" id="btnCancelarAlbum">Cancelar</button>
-                        </form>
-                        <hr>
-                    </div>
-                <% } %>
-
-                <div id="albumesContainer">
-                    <% if (albumes && albumes.length > 0) { %>
-                        <div class="albums-grid">
-                            <% albumes.forEach(album => { %>
-                                <div class="album-card">
-                                    <h3><%= album.nombre_album %></h3>
-                                    <p><%= album.descripcion_album %></p>
-                                </div>
-                            <% }); %>
-                        </div>
-                    <% } else { %>
-                        <p class="text-muted text-center">
-                            <%= esMiPropioPerfil ? 'No tienes álbumes creados.' : 'Este usuario no tiene álbumes creados o su portafolio no es público.' %>
-                        </p>
-                    <% } %>
-                </div>
-            </section>
-
-            <section>
-                <h2 class="text-center">
-                    <%= esMiPropioPerfil ? 'Mis Imágenes Subidas' : 'Imágenes de ' + usuario.nombre_usuario %>
-                </h2>
-                <% if (imagenes.length === 0) { %>
-                    <p class="text-center">
-                        <%= esMiPropioPerfil ? 'No has subido imágenes aún.' : 'Este usuario no ha subido imágenes aún o su portafolio no es público.' %>
-                    </p>
+        <% if (!esMiPropioPerfil) { %>
+            <div class="friendship-actions">
+                <% if (sonAmigos) { %>
+                    <button class="btn btn-secondary" disabled>Amigos</button>
+                <% } else if (solicitudPendiente) { %>
+                    <button class="btn btn-warning" disabled>Solicitud Enviada</button>
+                <% } else if (solicitudRecibidaPendiente) { %>
+                    <p>Solicitud de Amistad Recibida de <%= usuario.nombre_usuario %>:</p>
+                    <button class="btn btn-success" id="btnAceptarSolicitud" data-solicitud-id="<%= solicitudRecibidaPendiente.id_solicitud %>">Aceptar</button>
+                    <button class="btn btn-danger" id="btnRechazarSolicitud" data-solicitud-id="<%= solicitudRecibidaPendiente.id_solicitud %>">Rechazar</button>
                 <% } else { %>
-                    <div class="galeria">
-                        <% imagenes.forEach(img => { %>
-                            <div class="imagen-item">
-                                <img src="/imagenes/<%= img.url_obra %>" alt="Obra">
-                                <% if (img.titulo_obra_opcional) { %>
-                                    <p><%= img.titulo_obra_opcional %></p>
-                                <% } %>
-                                <% if (esMiPropioPerfil) { %>
-                                    <button onclick="eliminarImagen('<%= img.url_obra %>')" class="btn btn-danger">Eliminar</button>
-                                <% } %>
-                            </div>
-                        <% }) %>
-                    </div>
+                    <button id="sendFriendRequestBtn" class="btn btn-primary" data-user-id="<%= usuario.id_usuario %>">Enviar Solicitud de Amistad</button>
                 <% } %>
-            </section>
+            </div>
+            <p id="friendshipMessage" style="margin-top: 10px; text-align: center;"></p>
+        <% } %>
+    </div>
+    <% if (esMiPropioPerfil) { %>
+
+    <section class="upload-image-section">
+    <h2>Subir Nueva Obra</h2>
+    <form action="/api/obras/subir" method="POST" enctype="multipart/form-data" id="uploadImageForm">
+        <div class="form-group">
+            <label for="imageFile">Seleccionar Archivo (Imagen):</label>
+            <input type="file" id="imageFile" name="imagenObra" accept="image/*" required>
+        </div>
+        <div class="form-group">
+            <label for="titulo_obra_opcional">Título de la Obra (Opcional):</label>
+            <input type="text" id="titulo_obra_opcional" name="titulo_obra_opcional" maxlength="255">
+        </div>
+        <div class="form-group">
+            <label for="descripcion_obra">Descripción de la Obra (Opcional):</label>
+            <textarea id="descripcion_obra" name="descripcion_obra" rows="3" placeholder="Una breve descripción de tu obra, materiales, inspiración, etc."></textarea>
+        </div>
+        <div class="form-group">
+            <label for="precio">Precio (Opcional):</label>
+            <input type="number" id="precio" name="precio" step="0.01" min="0" placeholder="Ej: 99.99">
+        </div>
+        <div class="form-group">
+        <label for="selectAlbum">Asignar a Álbum (Opcional):</label>
+        <select class="form-control" id="selectAlbum" name="id_album">
+            <option value="">(Ningún álbum)</option>
+        </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Subir Obra</button>
+        <div id="uploadMessage" style="margin-top: 10px;"></div>
+    </form>
+</section>
+
+    <hr> 
+    <% } %>
+
+    <div class="profile-content">
+        <section>
+            <h2 class="text-center">
+                <%= esMiPropioPerfil ? 'Mis Álbumes' : 'Álbumes de ' + usuario.nombre_usuario %>
+            </h2>
 
             <% if (esMiPropioPerfil) { %>
-                <section>
-                    <h2 class="text-center">Subir Nueva Obra/Imagen</h2>
-                    <form id="uploadForm" enctype="multipart/form-data">
+                <button type="button" class="btn btn-primary mb-4" id="btnCrearAlbum">
+                    Crear Nuevo Álbum
+                </button>
+
+                <div id="formCrearAlbumContainer" style="display: none;">
+                    <h3 class="mb-3">Nuevo Álbum</h3>
+                    <form id="formNuevoAlbum">
                         <div class="form-group mb-3">
-                            <label for="imagenInput" class="form-label">Seleccionar Imagen:</label>
-                            <input type="file" class="form-control" id="imagenInput" name="imagen" accept="image/*" required>
+                            <label for="tituloAlbum">Título del Álbum:</label>
+                            <input type="text" class="form-control" id="tituloAlbum" name="titulo_album" required>
                         </div>
                         <div class="form-group mb-3">
-                            <label for="tituloObraOpcional" class="form-label">Título de la Obra (opcional):</label>
-                            <input type="text" class="form-control" id="tituloObraOpcional" name="titulo_obra_opcional" placeholder="Título opcional">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="selectAlbum" class="form-label">Seleccionar Álbum:</label>
-                            <select class="form-control" id="selectAlbum" name="id_album">
-                                <option value="">(Sin álbum)</option>
+                            <label for="tipoAlbum">Tipo de Álbum:</label>
+                            <select class="form-control" id="tipoAlbum" name="tipo_album">
+                                <option value="personal">Personal</option>
+                                <option value="galeria">Galería</option>
+                                <option value="coleccion">Colección</option>
+                                <option value="evento">Evento</option>
+                                <option value="otro">Otro</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-success">Subir Obra</button>
+                        <button type="submit" class="btn btn-success me-2">Guardar Álbum</button>
+                        <button type="button" class="btn btn-secondary" id="btnCancelarAlbum">Cancelar</button>
                     </form>
-                    <div id="uploadMessage" class="mt-3"></div>
-                </section>
+                    <hr>
+                </div>
             <% } %>
 
-        </div>
-    </div>
+            <div id="albumesContainer">
+                <% if (albumes && albumes.length > 0) { %>
+                    <div class="albums-grid">
+                        <% albumes.forEach(album => { %>
+                            <div class="album-card">
+                                    <h3><%= album.nombre_album %></h3>
+                                    <p class="card-text"><small class="text-muted">Tipo: <%= album.tipo_album %></small></p>
+                                </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <p class="text-muted text-center">
+                        <%= esMiPropioPerfil ? 'No tienes álbumes creados.' : 'Este usuario no tiene álbumes creados o su portafolio no es público.' %>
+                    </p>
+                <% } %>
+            </div>
+        </section>
 
-    <script src="/js/perfilFrontend.js"></script>
-    <%- include('partials/footer') %>
+        <section class="user-images-section">
+            <h3><%= esMiPropioPerfil ? 'Mis Obras' : 'Obras de ' + usuario.nombre_usuario %></h3>
+            <div class="image-grid">
+                <% if (obras && obras.length > 0) { %>
+                    <% obras.forEach(obra => { %>
+                        <div class="image-item">
+                            <img src="/imagenes/<%= obra.url_imagen || 'default_obra.png' %>" alt="<%= obra.titulo_obra || 'Obra de arte' %>">
+                            <% if (obra.titulo_obra) { %>
+                                <h4><%= obra.titulo_obra %></h4>
+                            <% } %>
+                            <% if (obra.precio) { %>
+                                <p>Precio: $<%= obra.precio %></p>
+                            <% } %>
+                            <% if (esMiPropioPerfil) { %>
+                                <div class="image-actions">
+                                    <button class="btn btn-sm btn-info" data-obra-id="<%= obra.id_obra %>">Editar</button>
+                                    <button class="btn btn-sm btn-danger" data-obra-id="<%= obra.id_obra %>">Eliminar</button>
+                                </div>
+                            <% } %>
+                        </div> 
+                    <% }); %> 
+                <% } else { %> 
+                    <p class="text-muted text-center">
+                        <%= esMiPropioPerfil ? 'Aún no has subido ninguna obra.' : 'Este usuario no ha subido ninguna obra aún.' %>
+                    </p>
+                <% } %> 
+            </div> 
+        </section>
+    </div> 
+</div> 
+
+
+<%- include('partials/footer') %>
+
+<script src="/js/perfilFrontend.js"></script>

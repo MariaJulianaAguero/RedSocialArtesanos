@@ -1,11 +1,10 @@
-// models/albumModel.js
-const connection = require('../conexion_bd'); 
+const pool = require('../conexion_bd');
 
 const albumModel = {
     // Crear un nuevo álbum
     createAlbum: async (userId, tituloAlbum, tipoAlbum = 'personal') => {
         try {
-            const [result] = await connection.promise().query(
+            const [result] = await pool.query(
                 'INSERT INTO albumes (id_usuario, titulo_album, tipo_album) VALUES (?, ?, ?)',
                 [userId, tituloAlbum, tipoAlbum]
             );
@@ -19,7 +18,7 @@ const albumModel = {
     // Obtener todos los álbumes de un usuario
     getAlbumsByUserId: async (userId) => {
         try {
-            const [rows] = await connection.promise().query(
+            const [rows] = await pool.query(
                 `SELECT
                     a.id_album,
                     a.titulo_album,
@@ -42,7 +41,7 @@ const albumModel = {
     getAlbumDetails: async (albumId, userId) => {
         try {
             // Primero, obtener los detalles del álbum y verificar que pertenezca al usuario
-            const [albumRows] = await connection.promise().query(
+            const [albumRows] = await pool.query(
                 'SELECT id_album, titulo_album, fecha_creacion_album, tipo_album FROM albumes WHERE id_album = ? AND id_usuario = ?',
                 [albumId, userId]
             );
@@ -55,7 +54,7 @@ const albumModel = {
 
             // Luego, obtener todas las imágenes asociadas a este álbum
             // Nota: Se asume que 'imagenes' tiene id_album ahora
-            const [imagenesRows] = await connection.promise().query(
+            const [imagenesRows] = await pool.query(
                 'SELECT id_imagen, url_obra, titulo_obra_opcional, fecha_subida FROM imagenes WHERE id_album = ? ORDER BY fecha_subida DESC',
                 [albumId]
             );
@@ -72,7 +71,7 @@ const albumModel = {
     // Actualizar un álbum
     updateAlbum: async (albumId, userId, newTitle, newType) => {
         try {
-            const [result] = await connection.promise().query(
+            const [result] = await pool.query(
                 'UPDATE albumes SET titulo_album = ?, tipo_album = ? WHERE id_album = ? AND id_usuario = ?',
                 [newTitle, newType, albumId, userId]
             );
@@ -88,7 +87,7 @@ const albumModel = {
         try {
             // Nota: ON DELETE SET NULL en la FK de `imagenes` se encargará de las imágenes.
             // Si el álbum se elimina, su `id_album` en la tabla `imagenes` se pone a NULL.
-            const [result] = await connection.promise().query(
+            const [result] = await pool.query(
                 'DELETE FROM albumes WHERE id_album = ? AND id_usuario = ?',
                 [albumId, userId]
             );
